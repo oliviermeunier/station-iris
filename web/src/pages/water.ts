@@ -1,5 +1,5 @@
 import { RADIUS_KM } from '../config';
-import { distanceKm, type RiverStation } from '../core';
+import { distanceKm, type Position, type RiverStation } from '../core';
 import { byCode } from '../data/searchIndex';
 import { routeHref } from '../router';
 import type { PiezoStation } from '../data/hubeau';
@@ -11,6 +11,10 @@ import {
   loadRiverDetail,
   loadRiverLatest,
   loadRivers,
+  loadWholeRiver,
+  riverLevel,
+  type NearbyRiver,
+  type RiverLevel,
   loadNappe,
   loadRiverStations,
   type Located,
@@ -50,12 +54,8 @@ export function renderRivers(main: HTMLElement, place: Place | null, params: URL
   if (code) return void renderRiverView(main, search, code, place);
   if (!place) return void main.replaceChildren(pageTitle('rivieres', 'Rivières'), search);
   const body = h('div');
-  main.replaceChildren(
-    pageTitle('rivieres', `Rivières ${placeHtml(place)}`),
-    search,
-    sectionShell('Stations de mesure', '--river', body),
-  );
-  void section(body, 'Recherche des stations de rivière…', () => riverSection(place));
+  main.replaceChildren(pageTitle('rivieres', `Rivières ${placeHtml(place)}`), search, body);
+  void section(body, 'Recherche des rivières proches…', () => riverSection(place));
 }
 
 function placeHtml(place: Place): string {
@@ -108,7 +108,7 @@ async function renderRiverView(main: HTMLElement, search: HTMLElement, code: str
     const stations = await loadRiverStations(code);
     if (stations.length === 0) return [h('p.empty', {}, 'Aucune station en service sur cette rivière.')];
     const near = place ? [...stations].sort((a, b) => distanceKm(place, a) - distanceKm(place, b))[0]! : stations[0]!;
-    return riverExplorer(null, stations, stations, title, near.code);
+    return riverExplorer(null, stations, title, near.code);
   });
 }
 
@@ -230,26 +230,89 @@ function shortName(s: RiverStation): string {
 
 async function riverSection(place: Place): Promise<(Node | null)[]> {
   const rivers = await loadRivers(place);
-  const shown = new Map<string, RiverStation>();
-  for (const s of rivers.profile) shown.set(s.code, s);
-  for (const l of rivers.inRadius) shown.set(l.item.code, l.item);
-  if (shown.size === 0 && rivers.nearestBeyond) shown.set(rivers.nearestBeyond.item.code, rivers.nearestBeyond.item);
-  if (shown.size === 0) return [h('p.empty', {}, 'Aucune station de mesure des rivières trouvée à proximité.')];
-  const kmOf = (code: string) => rivers.inRadius.find((l) => l.item.code === code)?.km ?? 99;
-  const first = rivers.profile.length ? [...rivers.profile].sort((a, b) => kmOf(a.code) - kmOf(b.code))[0]! : [...shown.values()][0]!;
-  const label = rivers.profileRiverLabel;
-  return riverExplorer(place, [...shown.values()], rivers.profile, label ? label.charAt(0).toUpperCase() + label.slice(1) : 'La rivière la plus proche', first.code);
+  if (rivers.length === 0) return [h('p.empty', {}, 'Aucune station de mesure des rivières trouvée à proximité.')];
+  const chosen = h('div');
+  const cards = rivers.map((r) => {
+    const card = riverCard(r, () => choose(r, card));
+    return card;
+  });
+  const choose = (r: NearbyRiver, card: HTMLElement) => {
+    for (const c of cards) c.setAttribute('aria-pressed', String(c === card));
+    void section(chosen, 'Recherche des stations de cette rivière…', async () => {
+      const stations = await loadWholeRiver(r);
+      return [sectionShell(r.name, '--river', ...riverExplorer(place, stations, r.name, r.stations[0]!.item.code))];
+    });
+  };
+  choose(rivers[0]!, cards[0]!);
+  return [
+    sectionShell(
+      rivers.length > 1 ? `${rivers.length} rivières près de chez vous` : 'La rivière la plus proche',
+      '--river',
+      h('p.note', {}, 'Choisissez une rivière pour voir toutes ses stations de mesure, de la source vers l’aval.'),
+      h('div.river-cards', {}, cards),
+    ),
+    chosen,
+  ];
 }
 
-/** Upstream→downstream profile linked to a map of stations, plus the selected station's detail. */
-function riverExplorer(
-  place: Place | null,
-  shownList: RiverStation[],
-  profile: RiverStation[],
-  profileLabel: string,
-  firstCode: string,
-): (Node | null)[] {
-  const shown = new Map(shownList.map((s) => [s.code, s]));
+/** Nearby river, with its level from the flow stations closest to the place. */
+function riverCard(r: NearbyRiver, onPick: () => void): HTMLElement {
+  const near = r.stations.filter((l) => l.km <= RADIUS_KM).length;
+  const level = h('div.river-card-level', {}, h('span.loading', {}, 'niveau…'));
+  const card = h(
+    'button.river-card',
+    { type: 'button', 'aria-pressed': false, onclick: onPick },
+    h('b', {}, r.name),
+    h('span.note', {}, near ? `${near} station${near > 1 ? 's' : ''} à moins de ${RADIUS_KM} km` : `station la plus proche à ${km(r.stations[0]!.km)}`),
+    level,
+  );
+  const positions: Position[] = [];
+  const nearest = r.stations.slice(0, 6).map((l) => l.item.code);
+  void Promise.all(
+    nearest.map(async (code) => {
+      const latest = await loadRiverLatest(code).catch(() => null);
+      if (latest?.grandeur !== 'QmnJ') return;
+      const d = await loadRiverDetail(code).catch(() => null);
+      if (d?.position) positions.push(d.position);
+    }),
+  ).then(() => {
+    const lv = riverLevel(positions);
+    level.replaceChildren(
+      lv.position
+        ? h('span', {}, h('span', { class: `lv-dot lv-${lv.position}` }), `Débit ${positionShort(lv.position, 'debit').toLowerCase()}`)
+        : h('span.note', {}, 'hauteur seulement'),
+    );
+  });
+  return card;
+}
+
+/** Overall level of a river, from all its flow stations. */
+function levelView(lv: RiverLevel, done: number, of: number): Node {
+  const loading = done < of ? ` (calcul : ${done} stations sur ${of})` : '';
+  if (!lv.position) {
+    return done < of
+      ? h('p.note', {}, `Calcul du niveau de la rivière${loading}…`)
+      : h('p.note', {}, 'Pas de niveau d’ensemble : les stations de cette rivière ne publient que la hauteur d’eau, qui ne se compare pas d’une année à l’autre.');
+  }
+  const order: Position[] = ['belowAll', 'low', 'normal', 'high', 'aboveAll'];
+  const shown = order.filter((p) => lv.counts[p] > 0);
+  return h(
+    'div.river-level',
+    {},
+    h('div', { html: `Niveau d’ensemble de la rivière : <strong>débit ${positionShort(lv.position, 'debit').toLowerCase()}</strong> pour la saison${loading}.` }),
+    h('div.lv-bar', {}, shown.map((p) => h('span', { class: `lv-${p}`, style: `flex:${lv.counts[p]}`, title: `${positionShort(p, 'debit')} : ${lv.counts[p]}` }))),
+    h(
+      'div.note',
+      {},
+      `D’après ${lv.total} station${lv.total > 1 ? 's' : ''} qui mesure${lv.total > 1 ? 'nt' : ''} le débit : ` +
+        shown.map((p) => `${positionShort(p, 'debit').toLowerCase()} ${lv.counts[p]}`).join(' · '),
+    ),
+  );
+}
+
+/** One river: upstream→downstream profile, its overall level, a map of its stations and the selected one's detail. */
+function riverExplorer(place: Place | null, stations: RiverStation[], riverLabel: string, firstCode: string): (Node | null)[] {
+  const shown = new Map(stations.map((s) => [s.code, s]));
   const markerEls = new Map<string, HTMLElement>();
   const gaugeEls = new Map<string, HTMLElement>();
   const detailBox = h('div');
@@ -263,17 +326,17 @@ function riverExplorer(
     selected = code;
     highlight(code);
     const s = shown.get(code)!;
-    void section(detailBox, 'Chargement de l’historique…', async () => riverDetail(s, await loadRiverDetail(code)));
+    void section(detailBox, 'Chargement de l’historique…', async () => riverDetail(s, riverLabel, await loadRiverDetail(code)));
   };
 
-  const markers = shownList.map((s) => {
+  const markers = stations.map((s) => {
     const html = h('div', {}, h('div.marker-label', {}, `${shortName(s)} · …`), h('div.marker-dot'));
     markerEls.set(s.code, html);
     return { id: s.code, lat: s.lat, lon: s.lon, html, title: s.name };
   });
   const map = stationMap(place, markers, { onHover: highlight, onSelect: select });
 
-  const gauges = profile.map((s) => {
+  const gauges = stations.map((s) => {
     const g = h(
       'div.gauge',
       { tabindex: 0, onmouseenter: () => highlight(s.code), onmouseleave: () => highlight(null), onclick: () => select(s.code) },
@@ -286,7 +349,21 @@ function riverExplorer(
     return g;
   });
 
+  const levelBox = h('div');
+  const positions: Position[] = [];
+  let done = 0;
+  const drawLevel = () => levelBox.replaceChildren(levelView(riverLevel(positions), done, stations.length));
+  drawLevel();
+
   const loadOne = async (s: RiverStation) => {
+    try {
+      await loadStation(s);
+    } finally {
+      done += 1;
+      drawLevel();
+    }
+  };
+  const loadStation = async (s: RiverStation) => {
     const m = markerEls.get(s.code);
     const g = gaugeEls.get(s.code);
     try {
@@ -299,6 +376,7 @@ function riverExplorer(
       if (r.grandeur !== 'QmnJ') return;
       // Flow stations get a mini reservoir once their history is known.
       const d = await loadRiverDetail(s.code);
+      if (d.position) positions.push(d.position);
       if (d.fill === null) return;
       g?.children[0]!.replaceChildren(h('div', {}, h('b', {}, riverValue(d))), tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }));
       m?.replaceChildren(h('div.marker-label', {}, `${shortName(s)} · ${riverValue(d)}`), tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }));
@@ -307,7 +385,7 @@ function riverExplorer(
     }
   };
   // A few stations at a time: a whole river can have dozens.
-  const queue = [...shownList];
+  const queue = [...stations];
   const worker = async () => {
     for (let s = queue.shift(); s; s = queue.shift()) await loadOne(s);
   };
@@ -315,13 +393,14 @@ function riverExplorer(
 
   select(firstCode);
   return [
-    profile.length ? h('div', {}, h('div.profile-river', {}, `${profileLabel}, de l’amont (à gauche) vers l’aval`), h('div.profile', {}, gauges)) : null,
+    levelBox,
+    h('div', {}, h('div.profile-river', {}, `${riverLabel}, de l’amont (à gauche) vers l’aval`), h('div.profile', {}, gauges)),
     h('div.grid-2', {}, map.el, detailBox),
   ];
 }
 
-function riverDetail(s: RiverStation, d: RiverDetail): (Node | null)[] {
-  if (!d.latest) return [h('p.verdict', {}, `${s.name} : pas de mesure récente.`)];
+function riverDetail(s: RiverStation, riverLabel: string, d: RiverDetail): (Node | null)[] {
+  if (!d.latest) return [h('p.verdict', {}, `${s.name} (${riverLabel}) : pas de mesure récente.`)];
   const isFlow = d.grandeur === 'QmnJ';
   const head = isFlow
     ? d.position
@@ -329,7 +408,7 @@ function riverDetail(s: RiverStation, d: RiverDetail): (Node | null)[] {
       : `Débit : <strong>${riverValue(d)}</strong> le ${dateLabel(d.latest[0])}.`
     : `Hauteur : <strong>${riverValue(d)}</strong> le ${dateLabel(d.latest[0])}.`;
   return [
-    h('p.verdict', { html: `<b>${escapeHtml(s.name)}</b><br>${head}` }),
+    h('p.verdict', { html: `<b>${escapeHtml(s.name)}</b><br><span class="note">Rivière : ${escapeHtml(riverLabel)}</span><br>${head}` }),
     isFlow && d.env
       ? h(
           'div.reservoir',

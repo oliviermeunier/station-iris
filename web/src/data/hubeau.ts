@@ -22,6 +22,8 @@ export interface HydroStation {
   code: string;
   name: string;
   riverLabel: string | null;
+  /** Sandre river code. One river can have several (the Sarthe has two). */
+  riverCode: string | null;
   lat: number;
   lon: number;
 }
@@ -46,6 +48,7 @@ interface RawHydro {
   code_station: string;
   libelle_station: string;
   libelle_cours_eau?: string | null;
+  code_cours_eau?: string | null;
   longitude_station: number;
   latitude_station: number;
 }
@@ -81,6 +84,7 @@ export function parseHydroStations(raw: RawHydro[]): HydroStation[] {
     code: s.code_station,
     name: s.libelle_station.replace(/ /g, ' '),
     riverLabel: s.libelle_cours_eau ?? null,
+    riverCode: s.code_cours_eau ?? null,
     lat: s.latitude_station,
     lon: s.longitude_station,
   }));
@@ -135,7 +139,7 @@ export async function hydroStationsByRiver(code: string): Promise<HydroStation[]
     code_cours_eau: code,
     en_service: true,
     size: 500,
-    fields: 'code_station,libelle_station,libelle_cours_eau,longitude_station,latitude_station',
+    fields: 'code_station,libelle_station,libelle_cours_eau,code_cours_eau,longitude_station,latitude_station',
   })}`;
   return parseHydroStations(await allPages<RawHydro>(url, 7 * DAY));
 }
@@ -145,7 +149,7 @@ export async function hydroStations(bbox: number[]): Promise<HydroStation[]> {
     bbox: bboxParam(bbox),
     en_service: true,
     size: 500,
-    fields: 'code_station,libelle_station,libelle_cours_eau,longitude_station,latitude_station',
+    fields: 'code_station,libelle_station,libelle_cours_eau,code_cours_eau,longitude_station,latitude_station',
   })}`;
   return parseHydroStations(await allPages<RawHydro>(url, 7 * DAY));
 }

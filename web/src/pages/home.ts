@@ -154,7 +154,7 @@ export function renderHome(main: HTMLElement, place: Place): void {
 
   loadRivers(place)
     .then(async (r) => {
-      const s = r.inRadius[0]?.item ?? r.profile[0] ?? r.nearestBeyond?.item;
+      const s = r[0]?.stations[0]?.item;
       if (!s) {
         river.fill('—', 'aucune station proche');
         return;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cumulativeByYear, points, rollingBalance, withinOrNearest } from './store';
+import { cumulativeByYear, groupRivers, points, riverLevel, riverName, rollingBalance, withinOrNearest } from './store';
 
 const flat = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
   Math.hypot(a.lat - b.lat, a.lon - b.lon) * 100;
@@ -49,5 +49,46 @@ describe('series helpers', () => {
       ['2026-01-01', 1],
       ['2026-01-02', 2.5],
     ]);
+  });
+});
+
+describe('rivers', () => {
+  const flat = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => Math.hypot(a.lat - b.lat, a.lon - b.lon) * 100;
+  const st = (code: string, river: string, lat: number) => ({ code, name: code, river, lat, lon: 0 });
+
+  it('names rivers', () => {
+    expect(riverName('La Sarthe à Cheffes', null)).toBe('La Sarthe');
+    expect(riverName('x', 'le Loir')).toBe('Le Loir');
+    expect(riverName('[La Voutonne] à Précigné', null)).toBe('La Voutonne');
+  });
+
+  it('groups stations by river, merging Sandre codes, nearest river first', () => {
+    const rivers = groupRivers(
+      [
+        { station: st('M072', 'sarthe', 0.08), name: 'La Sarthe', riverCode: 'M---0060' },
+        { station: st('M073', 'sarthe', 0.05), name: 'La Sarthe', riverCode: 'M---0061' },
+        { station: st('M156', 'loir', 0.03), name: 'Le Loir', riverCode: 'M1--0160' },
+        { station: st('M410', 'maine', 0.5), name: 'La Maine', riverCode: 'M4--0190' },
+      ],
+      { lat: 0, lon: 0 },
+      10,
+      flat,
+    );
+    expect(rivers.map((r) => r.name)).toEqual(['Le Loir', 'La Sarthe']);
+    expect(rivers[1]!.codes).toEqual(['M---0060', 'M---0061']);
+    expect(rivers[1]!.stations.map((l) => l.item.code)).toEqual(['M073', 'M072']);
+  });
+
+  it('falls back to the nearest river', () => {
+    const rivers = groupRivers([{ station: st('M410', 'maine', 0.5), name: 'La Maine', riverCode: null }], { lat: 0, lon: 0 }, 10, flat);
+    expect(rivers.map((r) => r.name)).toEqual(['La Maine']);
+  });
+
+  it('computes an overall river level', () => {
+    expect(riverLevel([]).position).toBeNull();
+    expect(riverLevel(['low', 'low', 'normal']).position).toBe('low');
+    expect(riverLevel(['low', 'normal']).position).toBe('low');
+    expect(riverLevel(['belowAll', 'aboveAll']).position).toBe('normal');
+    expect(riverLevel(['low', 'normal', 'normal']).counts.normal).toBe(2);
   });
 });

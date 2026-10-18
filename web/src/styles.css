@@ -351,3 +351,24 @@ button { font: inherit; color: inherit; }
   .nav .short { display: block; white-space: nowrap; }
   .headline.with-icon .icon { width: 34px; height: 34px; }
 }
+
+/* ---------- nearby rivers ---------- */
+.river-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.river-card {
+  display: flex; flex-direction: column; gap: 4px; text-align: left; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.river-card b { font-family: 'Fraunces Variable', Fraunces, Georgia, serif; font-size: 19px; color: var(--river); }
+.river-card .note { margin: 0; }
+.river-card:hover { border-color: var(--river); }
+.river-card[aria-pressed='true'] { border-color: var(--river); box-shadow: 0 0 0 2px var(--river) inset; }
+.river-card-level { font-size: 14px; font-weight: 600; }
+.lv-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.river-level { margin: 4px 0 16px; display: grid; gap: 6px; max-width: 640px; }
+.lv-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; gap: 2px; }
+.lv-belowAll { background: var(--accent); }
+.lv-low { background: color-mix(in srgb, var(--accent) 50%, var(--panel)); }
+.lv-normal { background: var(--river); }
+.lv-high { background: var(--water); }
+.lv-aboveAll { background: var(--water-2); }

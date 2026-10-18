@@ -1,6 +1,6 @@
 // Loads and combines data for a place. Every loader is memoised per place / station so
 // that switching pages does not refetch.
-import { PROFILE_DOWN_KM, PROFILE_UP_KM, RADIUS_KM } from './config';
+import { PROFILE_UP_KM, RADIUS_KM } from './config';
 import {
   bbox,
   classify,
@@ -9,7 +9,6 @@ import {
   envelopeAt,
   fillRatio,
   riverKey,
-  riverProfile,
   type Envelope,
   type Point,
   type Position,
@@ -203,35 +202,93 @@ export function loadRiverStations(code: string): Promise<RiverStation[]> {
   );
 }
 
-export interface RiverSet {
-  /** Stations within the radius, nearest first. */
-  inRadius: Located<RiverStation>[];
-  nearestBeyond: Located<RiverStation> | null;
-  /** Nearest river, upstream to downstream. */
-  profile: RiverStation[];
-  profileRiverLabel: string;
+/** "La Sarthe" from Hub'Eau's river label ("la Sarthe"), or from the station label ("[La Voutonne] à Précigné"). */
+export function riverName(stationName: string, riverLabel: string | null): string {
+  const raw = riverLabel?.trim() || stationName.split(/\s(?:à|aux|au)\s/)[0]!;
+  const clean = raw.replace(/^\[/, '').replace(/\]$/, '').trim();
+  return clean.charAt(0).toUpperCase() + clean.slice(1);
 }
 
-export function loadRivers(place: Place): Promise<RiverSet> {
+export interface NearbyRiver {
+  /** Grouping key: the river name without its article. */
+  key: string;
+  name: string;
+  /** Sandre river codes seen on its stations. */
+  codes: string[];
+  /** Its stations around the place, nearest first. */
+  stations: Located<RiverStation>[];
+}
+
+/**
+ * Stations grouped by river (by name: Sandre sometimes splits one river into several codes).
+ * Keeps rivers with a station within `radiusKm`, nearest first — or, if none, the nearest river.
+ */
+export function groupRivers(
+  items: { station: RiverStation; name: string; riverCode: string | null }[],
+  center: { lat: number; lon: number },
+  radiusKm: number,
+  dist: (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => number = distanceKm,
+): NearbyRiver[] {
+  const groups = new Map<string, NearbyRiver>();
+  for (const { station, name, riverCode } of items) {
+    let g = groups.get(station.river);
+    if (!g) {
+      g = { key: station.river, name, codes: [], stations: [] };
+      groups.set(station.river, g);
+    }
+    if (riverCode && !g.codes.includes(riverCode)) g.codes.push(riverCode);
+    g.stations.push({ item: station, km: dist(center, station) });
+  }
+  const rivers = [...groups.values()];
+  for (const r of rivers) r.stations.sort((a, b) => a.km - b.km);
+  rivers.sort((a, b) => a.stations[0]!.km - b.stations[0]!.km);
+  const near = rivers.filter((r) => r.stations[0]!.km <= radiusKm);
+  return near.length ? near : rivers.slice(0, 1);
+}
+
+/** Rivers around the place (see groupRivers). */
+export function loadRivers(place: Place): Promise<NearbyRiver[]> {
   return once(`rs:${placeKey(place)}`, async () => {
     const raw = await hydroStations(bbox(place.lat, place.lon, PROFILE_UP_KM + RADIUS_KM));
-    const stations: RiverStation[] = raw.map((s) => ({
-      code: s.code,
-      name: s.name,
-      river: riverKey(s.name, s.riverLabel),
-      lat: s.lat,
-      lon: s.lon,
-    }));
-    const { inRadius, nearestBeyond } = withinOrNearest(stations, place, RADIUS_KM);
-    const profile = riverProfile(stations, place.lat, place.lon, PROFILE_UP_KM, PROFILE_DOWN_KM);
-    const label = raw.find((s) => s.code === profile[0]?.code);
-    return {
-      inRadius,
-      nearestBeyond,
-      profile,
-      profileRiverLabel: label?.riverLabel ?? profile[0]?.river ?? '',
-    };
+    return groupRivers(
+      raw.map((s) => ({
+        station: { code: s.code, name: s.name, river: riverKey(s.name, s.riverLabel), lat: s.lat, lon: s.lon },
+        name: riverName(s.name, s.riverLabel),
+        riverCode: s.riverCode,
+      })),
+      place,
+      RADIUS_KM,
+    );
   });
+}
+
+/** Every station of a nearby river, upstream to downstream, across all its Sandre codes. */
+export async function loadWholeRiver(river: NearbyRiver): Promise<RiverStation[]> {
+  const lists = await Promise.all(river.codes.map((c) => loadRiverStations(c).catch(() => [])));
+  const all = new Map<string, RiverStation>();
+  for (const s of [...lists.flat(), ...river.stations.map((l) => l.item)]) all.set(s.code, { ...s, river: river.key });
+  return [...all.values()].sort((a, b) => a.code.localeCompare(b.code));
+}
+
+const SCORE: Record<Position, number> = { belowAll: -2, low: -1, normal: 0, high: 1, aboveAll: 2 };
+const BY_SCORE: Position[] = ['belowAll', 'low', 'normal', 'high', 'aboveAll'];
+
+export interface RiverLevel {
+  /** Mean of the stations' positions, rounded; null without any flow station. */
+  position: Position | null;
+  counts: Record<Position, number>;
+  total: number;
+}
+
+/** Overall level of a river from the verdicts of its flow stations. */
+export function riverLevel(positions: Position[]): RiverLevel {
+  const counts: Record<Position, number> = { belowAll: 0, low: 0, normal: 0, high: 0, aboveAll: 0 };
+  for (const p of positions) counts[p] += 1;
+  if (positions.length === 0) return { position: null, counts, total: 0 };
+  const mean = positions.reduce((s, p) => s + SCORE[p], 0) / positions.length;
+  // Round half away from zero: -0.5 is already "low", like 0.5 is "high".
+  const r = Math.sign(mean) * Math.round(Math.abs(mean));
+  return { position: BY_SCORE[r + 2]!, counts, total: positions.length };
 }
 
 export interface RiverLatest {
