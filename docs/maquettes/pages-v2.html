@@ -1,0 +1,61 @@
+<h2>Trois pages : Accueil, Eau, Températures</h2>
+<p class="subtitle">Maquette de la structure. Chiffres eau = ta page actuelle ; températures et détail pluie = inventés pour la maquette.</p>
+
+<style>
+  .mk { font: 13px/1.4 system-ui, sans-serif; color: #222; background: #fafaf7; border-radius: 6px; padding: 10px; }
+  .mk .nav { display: flex; gap: 14px; align-items: center; background: #2f6b4f; color: #fff; padding: 7px 10px; border-radius: 5px; margin-bottom: 10px; }
+  .mk .nav b { text-decoration: underline; }
+  .mk .nav input { margin-left: auto; padding: 3px 6px; border: none; border-radius: 3px; font: inherit; width: 130px; }
+  .mk .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mk .tile { background: #fff; border: 1px solid #ddd; border-top: 5px solid var(--c); border-radius: 6px; padding: 8px 10px; }
+  .mk .tile h4 { margin: 0 0 4px; font-size: 13px; color: var(--c); }
+  .mk .big { font-size: 20px; font-weight: 700; }
+  .mk .sec { background: #fff; border: 1px solid #ddd; border-left: 5px solid var(--c); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; }
+  .mk .sec h4 { margin: 0 0 6px; font-size: 13px; color: var(--c); }
+  .mk .ph { background: #eef1f3; border: 1px dashed #aab; border-radius: 4px; padding: 6px; color: #556; font-size: 12px; text-align: center; }
+  .mk .row { display: flex; gap: 8px; } .mk .row > * { flex: 1; }
+  .mk .t7 { display: flex; gap: 4px; text-align: center; font-size: 11px; }
+  .mk .t7 div { flex: 1; background: #fff6ee; border-radius: 4px; padding: 3px 0; }
+  .mk .gel { background: #e3f0ff !important; color: #1b4f9c; font-weight: 600; }
+  .pagelabel { font-weight: 700; margin: 4px 0 6px; }
+</style>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Accueil — la synthèse</div>
+    <div class="mockup-body"><div class="mk">
+      <div class="nav"><b>Accueil</b><span>Eau</span><span>Températures</span><input value="📍 Tiercé (49125)"></div>
+      <div class="grid">
+        <div class="tile" style="--c:#2f6fb5"><h4>☔ Pluie 7 jours</h4><div class="big">11,4 mm</div>pluie probable mer. 21</div>
+        <div class="tile" style="--c:#c2571a"><h4>🌡️ Aujourd'hui</h4><div class="big">6° / 15°</div>gel possible jeudi</div>
+        <div class="tile" style="--c:#7a5a2f"><h4>💧 Nappe</h4><div class="big">4,62 m</div>haute pour octobre</div>
+        <div class="tile" style="--c:#1f8a7a"><h4>🌊 Sarthe</h4><div class="big">2,99 m</div>à Châteauneuf, 17/10</div>
+      </div>
+      <p style="margin:8px 0 0;font-size:12px;color:#555">Chaque tuile mène à sa page. Une phrase par tuile, pas plus.</p>
+    </div></div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Page Eau</div>
+    <div class="mockup-body"><div class="mk">
+      <div class="nav"><span>Accueil</span><b>Eau</b><span>Températures</span><input value="📍 Tiercé (49125)"></div>
+      <div class="sec" style="--c:#2f6fb5"><h4>☔ Pluie</h4><div class="ph">7 jours : barres mm + probabilité · bilan pluie − évaporation · graphique zoomable</div></div>
+      <div class="sec" style="--c:#7a5a2f"><h4>💧 Nappe</h4><div class="row"><div class="ph">Carte des piézomètres<br>alentour en bâtons</div><div class="ph">Graphique zoomable</div></div></div>
+      <div class="sec" style="--c:#1f8a7a"><h4>🌊 Rivière</h4><div class="row"><div class="ph">Carte de la rivière,<br>hauteur par station</div><div class="ph">Graphique zoomable</div></div></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="mockup" style="margin-top:14px">
+  <div class="mockup-header">Page Températures</div>
+  <div class="mockup-body"><div class="mk">
+    <div class="nav"><span>Accueil</span><span>Eau</span><b>Températures</b><input value="📍 Tiercé (49125)"></div>
+    <div class="sec" style="--c:#c2571a"><h4>🌡️ 7 prochains jours (min / max)</h4>
+      <div class="t7">
+        <div>sam<br>6° / 15°</div><div>dim<br>5° / 14°</div><div>lun<br>4° / 12°</div><div>mar<br>2° / 11°</div>
+        <div>mer<br>3° / 10°</div><div class="gel">jeu<br>−1° / 9°<br>gel</div><div>ven<br>1° / 10°</div>
+      </div>
+    </div>
+    <div class="sec" style="--c:#c2571a"><h4>📈 12 mois : températures comparées à la normale</h4><div class="ph">Graphique zoomable (min, max, normale de saison)</div></div>
+  </div></div>
+</div>

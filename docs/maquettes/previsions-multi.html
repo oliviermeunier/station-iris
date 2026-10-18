@@ -1,0 +1,43 @@
+<h2>Prévisions à 7 jours : plusieurs sources combinées</h2>
+<p class="subtitle">Valeurs inventées. Idée : interroger plusieurs modèles météo (ex. Météo-France, européen ECMWF, allemand ICON, américain GFS) et montrer ce sur quoi ils s'accordent — et à quel point ils divergent.</p>
+
+<style>
+  .pv { font: 13px/1.4 system-ui, sans-serif; background: #fafaf7; border-radius: 8px; padding: 14px; }
+  .pv table { width: 100%; border-collapse: collapse; text-align: center; }
+  .pv th { font-weight: 600; color: #555; padding: 4px 0; }
+  .pv td { padding: 6px 2px; vertical-align: bottom; }
+  .range { position: relative; height: 110px; width: 26px; margin: 0 auto; }
+  .range .spread { position: absolute; left: 3px; right: 3px; background: #f6c9a8; border-radius: 4px; }
+  .range .cons { position: absolute; left: -4px; right: -4px; height: 3px; background: #c2571a; }
+  .rain { height: 60px; display: flex; align-items: flex-end; justify-content: center; }
+  .rain div { width: 22px; background: #3a7bd5; border-radius: 3px 3px 0 0; }
+  .agree { font-size: 11px; color: #666; }
+  .lbl { text-align: left; font-weight: 700; padding-right: 6px; white-space: nowrap; }
+</style>
+
+<div class="pv">
+  <table>
+    <tr><th></th><th>sam</th><th>dim</th><th>lun</th><th>mar</th><th>mer</th><th>jeu</th><th>ven</th></tr>
+    <tr>
+      <td class="lbl" style="color:#c2571a">🌡️ max<br><span class="agree">bande = écart<br>entre sources</span></td>
+      <td><div class="range"><div class="spread" style="bottom:55px;height:14px"></div><div class="cons" style="bottom:61px"></div></div>15°</td>
+      <td><div class="range"><div class="spread" style="bottom:50px;height:16px"></div><div class="cons" style="bottom:57px"></div></div>14°</td>
+      <td><div class="range"><div class="spread" style="bottom:40px;height:22px"></div><div class="cons" style="bottom:50px"></div></div>12°</td>
+      <td><div class="range"><div class="spread" style="bottom:30px;height:30px"></div><div class="cons" style="bottom:45px"></div></div>11°</td>
+      <td><div class="range"><div class="spread" style="bottom:22px;height:38px"></div><div class="cons" style="bottom:40px"></div></div>10°</td>
+      <td><div class="range"><div class="spread" style="bottom:15px;height:46px"></div><div class="cons" style="bottom:36px"></div></div>9°</td>
+      <td><div class="range"><div class="spread" style="bottom:12px;height:56px"></div><div class="cons" style="bottom:40px"></div></div>10°</td>
+    </tr>
+    <tr>
+      <td class="lbl" style="color:#3a7bd5">☔ pluie<br><span class="agree">% = part des sources<br>qui prévoient de la pluie</span></td>
+      <td><div class="rain"><div style="height:3px"></div></div>0 mm<br><b>1/4</b></td>
+      <td><div class="rain"><div style="height:2px"></div></div>0 mm<br><b>0/4</b></td>
+      <td><div class="rain"><div style="height:10px"></div></div>1 mm<br><b>2/4</b></td>
+      <td><div class="rain"><div style="height:26px"></div></div>3 mm<br><b>3/4</b></td>
+      <td><div class="rain"><div style="height:50px"></div></div>6 mm<br><b>4/4</b></td>
+      <td><div class="rain"><div style="height:14px"></div></div>1,5 mm<br><b>2/4</b></td>
+      <td><div class="rain"><div style="height:4px"></div></div>0 mm<br><b>1/4</b></td>
+    </tr>
+  </table>
+  <p class="agree" style="margin-top:10px">Plus on s'éloigne dans le temps, plus la bande s'élargit : les sources divergent, la prévision est moins sûre. Survol d'un jour = le détail source par source.</p>
+</div>

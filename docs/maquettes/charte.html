@@ -1,0 +1,118 @@
+<h2>Charte graphique : trois directions pour l'accueil</h2>
+<p class="subtitle">Même contenu dans les trois (Tiercé, données du jour, détail pluie inventé). Seule l'allure change. Clique celle qui te plaît — tu peux aussi dire « le fond de A avec les couleurs de C ».</p>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  .shot { border-radius: 14px; overflow: hidden; margin-bottom: 6px; }
+  .rainbars { display: flex; gap: 5px; align-items: flex-end; height: 46px; margin-top: 10px; }
+  .rainbars i { flex: 1; border-radius: 4px 4px 1px 1px; display: block; }
+  .days { display: flex; gap: 5px; font-size: 10px; margin-top: 4px; }
+  .days span { flex: 1; text-align: center; }
+  .tubemini { width: 26px; height: 54px; border-radius: 0 0 8px 8px; position: relative; overflow: hidden; }
+  .tubemini b { position: absolute; left: 0; right: 0; bottom: 0; height: 17%; display: block; }
+
+  /* ---------- A : éditorial clair ---------- */
+  .A { background: #f6f1e7; color: #1f2a2e; font-family: Inter, system-ui, sans-serif; padding: 26px; }
+  .A .top { display: flex; align-items: baseline; gap: 16px; border-bottom: 1px solid #d8cfbd; padding-bottom: 14px; }
+  .A .brand { font-family: Fraunces, serif; font-size: 22px; font-weight: 700; color: #1f4f5f; }
+  .A .nav { font-size: 13px; color: #5b6668; display: flex; gap: 14px; }
+  .A .nav b { color: #1f2a2e; }
+  .A .place { margin-left: auto; font-size: 13px; background: #fff; border: 1px solid #d8cfbd; border-radius: 999px; padding: 5px 12px; }
+  .A h1 { font-family: Fraunces, serif; font-weight: 500; font-size: 30px; line-height: 1.15; margin: 22px 0 18px; max-width: 640px; }
+  .A h1 em { font-style: normal; color: #b4532a; }
+  .A .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-top: 2px solid #1f2a2e; }
+  .A .t { padding: 14px 16px 6px 0; border-right: 1px solid #d8cfbd; margin-right: 16px; }
+  .A .t:last-child { border-right: none; }
+  .A .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #7a8487; }
+  .A .v { font-family: Fraunces, serif; font-size: 32px; font-weight: 700; margin: 4px 0; }
+  .A .s { font-size: 13px; color: #44514f; }
+  .A .rainbars i { background: #2f6f8f; }
+
+  /* ---------- B : instrument sombre ---------- */
+  .B { background: radial-gradient(1200px 400px at 10% -10%, #17324a 0%, #0b1420 55%); color: #e6edf3; font-family: Inter, system-ui, sans-serif; padding: 26px; }
+  .B .top { display: flex; align-items: center; gap: 16px; }
+  .B .brand { font-weight: 700; font-size: 18px; letter-spacing: .02em; }
+  .B .brand span { color: #4fd1c5; }
+  .B .nav { font-size: 13px; color: #8aa0b4; display: flex; gap: 6px; }
+  .B .nav span { padding: 5px 10px; border-radius: 8px; }
+  .B .nav .on { background: rgba(79,209,197,.14); color: #4fd1c5; }
+  .B .place { margin-left: auto; font-size: 13px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; padding: 6px 12px; }
+  .B .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 22px; }
+  .B .t { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09); border-radius: 14px; padding: 14px; backdrop-filter: blur(6px); }
+  .B .k { font-size: 12px; color: #8aa0b4; display: flex; justify-content: space-between; }
+  .B .v { font-family: "JetBrains Mono", monospace; font-size: 28px; font-weight: 700; margin: 6px 0 2px; }
+  .B .s { font-size: 12.5px; color: #b8c6d3; }
+  .B .pill { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+  .B .rainbars i { background: linear-gradient(#4fd1c5, #2b7fd4); }
+  .B .days { color: #6f8598; }
+
+  /* ---------- C : doux et vivant ---------- */
+  .C { background: linear-gradient(180deg, #dff1ff 0%, #f7fbff 45%, #fff8ef 100%); color: #1d2b3a; font-family: Outfit, system-ui, sans-serif; padding: 26px; }
+  .C .top { display: flex; align-items: center; gap: 16px; }
+  .C .brand { font-weight: 700; font-size: 20px; color: #1d4e89; display: flex; align-items: center; gap: 8px; }
+  .C .brand i { width: 26px; height: 26px; border-radius: 50% 50% 50% 8px; background: linear-gradient(135deg, #5ab0ff, #2b6fd6); display: inline-block; transform: rotate(-45deg); }
+  .C .nav { font-size: 14px; color: #5a6b7d; display: flex; gap: 4px; background: #fff; padding: 4px; border-radius: 999px; box-shadow: 0 2px 10px rgba(29,78,137,.08); }
+  .C .nav span { padding: 5px 12px; border-radius: 999px; }
+  .C .nav .on { background: #1d4e89; color: #fff; }
+  .C .place { margin-left: auto; font-size: 14px; background: #fff; border-radius: 999px; padding: 7px 14px; box-shadow: 0 2px 10px rgba(29,78,137,.08); }
+  .C h1 { font-size: 26px; font-weight: 600; margin: 20px 0 14px; }
+  .C .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .C .t { background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 6px 24px rgba(29,78,137,.10); }
+  .C .k { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .C .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .C .v { font-size: 30px; font-weight: 700; margin: 6px 0 2px; }
+  .C .s { font-size: 13px; color: #55657a; }
+  .C .rainbars i { background: #5ab0ff; border-radius: 6px 6px 2px 2px; }
+</style>
+
+<div class="cards" style="grid-template-columns:1fr">
+
+  <div class="card" data-choice="A-editorial" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="shot A">
+      <div class="top"><div class="brand">Nom à trouver</div><div class="nav"><b>Accueil</b><span>Eau</span><span>Températures</span></div><div class="place">📍 Tiercé · 10 km</div></div>
+      <h1>Un peu de pluie attendue mercredi, mais la nappe reste <em>basse</em> pour la mi-octobre.</h1>
+      <div class="grid">
+        <div class="t"><div class="k">Pluie · 7 jours</div><div class="v">11,4 mm</div><div class="s">surtout mercredi 21</div>
+          <div class="rainbars"><i style="height:6%"></i><i style="height:4%"></i><i style="height:20%"></i><i style="height:50%"></i><i style="height:100%"></i><i style="height:26%"></i><i style="height:8%"></i></div></div>
+        <div class="t"><div class="k">Aujourd'hui</div><div class="v">6° / 15°</div><div class="s">gel possible jeudi</div></div>
+        <div class="t"><div class="k">Nappe · Cheffes</div><div class="v">Basse</div><div class="s">4,62 m sous le sol<br>proche de l'année la plus sèche</div></div>
+        <div class="t"><div class="k">La Sarthe · Châteauneuf</div><div class="v">2,99 m</div><div class="s">niveau réglé par un ouvrage</div></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>A — Éditorial clair</h3><p>Papier crème, titres à empattements, une grande phrase qui résume la situation. Esprit « journal de données », sobre et élégant.</p></div>
+  </div>
+
+  <div class="card" data-choice="B-instrument" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="shot B">
+      <div class="top"><div class="brand">Nom<span>.</span>à trouver</div><div class="nav"><span class="on">Accueil</span><span>Eau</span><span>Températures</span></div><div class="place">📍 Tiercé · 10 km</div></div>
+      <div class="grid">
+        <div class="t"><div class="k">Pluie 7 j <span class="pill" style="background:rgba(79,209,197,.15);color:#4fd1c5">4/4 sources</span></div><div class="v">11.4<small style="font-size:14px"> mm</small></div><div class="s">pic mercredi 21</div>
+          <div class="rainbars"><i style="height:6%"></i><i style="height:4%"></i><i style="height:20%"></i><i style="height:50%"></i><i style="height:100%"></i><i style="height:26%"></i><i style="height:8%"></i></div>
+          <div class="days"><span>S</span><span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span></div></div>
+        <div class="t"><div class="k">Température</div><div class="v">6° <span style="color:#6f8598">/</span> 15°</div><div class="s">❄ gel possible jeudi</div></div>
+        <div class="t" style="display:flex;gap:12px;align-items:flex-end"><div><div class="k">Nappe</div><div class="v" style="color:#f6ad55">basse</div><div class="s">4,62 m sous le sol</div></div>
+          <div class="tubemini" style="border:2px solid #3b5269;border-top:none"><b style="background:linear-gradient(#4fd1c5,#2b7fd4)"></b></div></div>
+        <div class="t"><div class="k">Sarthe</div><div class="v">2.99<small style="font-size:14px"> m</small></div><div class="s">niveau réglé · pas de verdict</div></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>B — Instrument de mesure, sombre</h3><p>Fond nuit, chiffres en police « technique », accents turquoise. Esprit station météo / tableau de bord pro.</p></div>
+  </div>
+
+  <div class="card" data-choice="C-doux" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="shot C">
+      <div class="top"><div class="brand"><i></i>Nom à trouver</div><div class="nav"><span class="on">Accueil</span><span>Eau</span><span>Températures</span></div><div class="place">📍 Tiercé · 10 km</div></div>
+      <h1>Bonjour Tiercé ☀️ — un peu de pluie mercredi</h1>
+      <div class="grid">
+        <div class="t"><div class="k"><span class="dot" style="background:#5ab0ff"></span>Pluie 7 jours</div><div class="v">11,4 mm</div><div class="s">surtout mercredi</div>
+          <div class="rainbars"><i style="height:6%"></i><i style="height:4%"></i><i style="height:20%"></i><i style="height:50%"></i><i style="height:100%"></i><i style="height:26%"></i><i style="height:8%"></i></div></div>
+        <div class="t"><div class="k"><span class="dot" style="background:#ff9f5a"></span>Aujourd'hui</div><div class="v">6° / 15°</div><div class="s">gel possible jeudi ❄️</div></div>
+        <div class="t" style="display:flex;gap:12px;align-items:flex-end"><div><div class="k"><span class="dot" style="background:#c08a4a"></span>Nappe</div><div class="v">Basse</div><div class="s">4,62 m sous le sol</div></div>
+          <div class="tubemini" style="background:#eef4fb;border:2px solid #c9d8ea;border-top:none"><b style="background:#5ab0ff"></b></div></div>
+        <div class="t"><div class="k"><span class="dot" style="background:#3cc4a8"></span>La Sarthe</div><div class="v">2,99 m</div><div class="s">niveau réglé par un ouvrage</div></div>
+      </div>
+    </div></div>
+    <div class="card-body"><h3>C — Doux et vivant</h3><p>Dégradé ciel → sable, cartes arrondies, police ronde, une pastille de couleur par sujet. Esprit appli grand public, chaleureux.</p></div>
+  </div>
+</div>

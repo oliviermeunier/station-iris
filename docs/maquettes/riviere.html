@@ -1,0 +1,43 @@
+<h2>Rivière : comment montrer la hauteur à chaque station ?</h2>
+<p class="subtitle">Seule « Châteauneuf, 2,99 m » est réelle. Les autres stations, leurs hauteurs et le tracé sont inventés pour la maquette.</p>
+
+<style>
+  .rv { font: 13px/1.4 system-ui, sans-serif; color: #222; background: #f3f1ea; border-radius: 6px; padding: 12px; min-height: 280px; position: relative; }
+  .rv svg text { font: 11px system-ui, sans-serif; fill: #222; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="carte" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="rv">
+      <svg viewBox="0 0 360 260" width="100%">
+        <rect x="0" y="0" width="360" height="260" fill="#eef0e6"/>
+        <circle cx="200" cy="140" r="100" fill="none" stroke="#999" stroke-dasharray="4 4"/>
+        <text x="235" y="45" fill="#777">rayon 10 km</text>
+        <path d="M40 10 C 90 60, 120 70, 150 110 S 210 170, 240 200 S 300 240, 330 255" fill="none" stroke="#4a90d9" stroke-width="6" stroke-linecap="round"/>
+        <text x="20" y="28" fill="#2a6db0">la Sarthe</text>
+        <circle cx="200" cy="140" r="5" fill="#c0392b"/><text x="208" y="138">Tiercé</text>
+        <!-- station markers with mini gauges -->
+        <g transform="translate(118,70)"><rect x="-7" y="-28" width="14" height="28" fill="#fff" stroke="#444"/><rect x="-7" y="-9" width="14" height="9" fill="#2a6db0"/><text x="12" y="-14">Châteauneuf</text><text x="12" y="-1" font-weight="700">2,99 m</text></g>
+        <g transform="translate(168,128)"><rect x="-7" y="-28" width="14" height="28" fill="#fff" stroke="#444"/><rect x="-7" y="-12" width="14" height="12" fill="#2a6db0"/><text x="-82" y="-14">station B</text><text x="-82" y="-1" font-weight="700">3,40 m</text></g>
+        <g transform="translate(250,208)"><rect x="-7" y="-28" width="14" height="28" fill="#fff" stroke="#444"/><rect x="-7" y="-7" width="14" height="7" fill="#2a6db0"/><text x="12" y="-14">station C</text><text x="12" y="-1" font-weight="700">1,85 m</text></g>
+      </svg>
+    </div></div>
+    <div class="card-body"><h3>A — Sur la carte</h3><p>Le vrai tracé de la rivière sur un fond de carte, chaque station avec un petit réservoir (entre son min et son max à cette date) et sa hauteur.</p></div>
+  </div>
+
+  <div class="card" data-choice="profil" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="rv">
+      <div style="font-weight:700;color:#2a6db0;margin-bottom:6px">la Sarthe — de l'amont vers l'aval</div>
+      <svg viewBox="0 0 360 220" width="100%">
+        <line x1="20" y1="170" x2="340" y2="170" stroke="#4a90d9" stroke-width="6" stroke-linecap="round"/>
+        <text x="16" y="200">amont</text><text x="306" y="200">aval</text>
+        <g transform="translate(80,170)"><rect x="-14" y="-110" width="28" height="110" fill="#fff" stroke="#444"/><rect x="-14" y="-45" width="28" height="45" fill="#2a6db0"/><text x="-34" y="-118">Châteauneuf</text><text x="-14" y="18" font-weight="700">2,99</text></g>
+        <g transform="translate(180,170)"><rect x="-14" y="-110" width="28" height="110" fill="#fff" stroke="#444"/><rect x="-14" y="-60" width="28" height="60" fill="#2a6db0"/><text x="-26" y="-118">station B</text><text x="-14" y="18" font-weight="700">3,40</text></g>
+        <g transform="translate(280,170)"><rect x="-14" y="-110" width="28" height="110" fill="#fff" stroke="#444"/><rect x="-14" y="-30" width="28" height="30" fill="#2a6db0"/><text x="-26" y="-118">station C</text><text x="-14" y="18" font-weight="700">1,85</text></g>
+        <text x="200" y="100" fill="#c0392b">▼ Tiercé</text>
+      </svg>
+    </div></div>
+    <div class="card-body"><h3>B — En profil, de l'amont vers l'aval</h3><p>La rivière dépliée en ligne droite, les stations dans l'ordre du courant. On voit d'un coup si une montée arrive de l'amont.</p></div>
+  </div>
+</div>
+<p class="subtitle" style="margin-top:12px">Les deux peuvent coexister : la carte pour situer, le profil pour suivre une crue ou une baisse le long de la rivière.</p>

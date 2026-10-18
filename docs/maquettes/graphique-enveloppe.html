@@ -1,0 +1,36 @@
+<h2>Graphique : se situer par rapport à la moyenne, au min et au max connus</h2>
+<p class="subtitle">Courbes inventées pour la maquette. Le même principe servirait pour la nappe, la rivière, la pluie cumulée et les températures.</p>
+
+<style>
+  .gx { font: 13px/1.4 system-ui, sans-serif; background: #fafaf7; border-radius: 8px; padding: 14px; }
+  .gx svg text { font: 11px system-ui, sans-serif; fill: #444; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; }
+  .legend span::before { content: ""; display: inline-block; width: 18px; height: 10px; margin-right: 6px; vertical-align: middle; background: var(--c); border: var(--b, none); }
+  .tools { display: flex; gap: 8px; margin-bottom: 8px; font-size: 12px; }
+  .tools span { border: 1px solid #bbb; border-radius: 4px; padding: 2px 8px; background: #fff; }
+  .tools .on { background: #2f6b4f; color: #fff; border-color: #2f6b4f; }
+</style>
+
+<div class="gx">
+  <div style="font-weight:700;color:#7a5a2f;margin-bottom:6px">💧 Nappe — Cheffes · niveau de l'eau (plus haut = plus d'eau)</div>
+  <div class="tools"><span>1 mois</span><span>3 mois</span><span class="on">1 an</span><span>5 ans</span><span>tout</span><span style="margin-left:auto">🔍 molette = zoom · glisser = se déplacer</span></div>
+  <svg viewBox="0 0 640 260" width="100%">
+    <line x1="40" y1="220" x2="630" y2="220" stroke="#999"/>
+    <line x1="40" y1="20" x2="40" y2="220" stroke="#999"/>
+    <text x="45" y="238">nov</text><text x="140" y="238">janv</text><text x="240" y="238">mars</text><text x="340" y="238">mai</text><text x="440" y="238">juil</text><text x="540" y="238">sept</text><text x="608" y="238">oct</text>
+    <!-- min-max band -->
+    <path d="M40 150 C 120 80, 200 40, 260 45 S 400 110, 470 160 S 580 200, 630 190
+             L 630 215 C 580 222, 520 215, 470 205 S 360 150, 260 120 S 120 175, 40 205 Z" fill="#9cc3e8" opacity="0.55"/>
+    <!-- mean -->
+    <path d="M40 178 C 120 130, 200 85, 260 82 S 400 135, 470 182 S 580 210, 630 202" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="6 4"/>
+    <!-- this year -->
+    <path d="M40 170 C 110 120, 190 70, 250 68 S 380 140, 460 190 S 570 214, 630 211" fill="none" stroke="#1f4f8f" stroke-width="3"/>
+    <circle cx="630" cy="211" r="5" fill="#1f4f8f"/>
+    <text x="520" y="250" fill="#1f4f8f" font-weight="700">aujourd'hui : proche du plus bas connu</text>
+  </svg>
+  <div class="legend">
+    <span style="--c:#9cc3e8">entre le min et le max connus (11 ans)</span>
+    <span style="--c:transparent;--b:2px dashed #555">moyenne</span>
+    <span style="--c:#1f4f8f">cette année</span>
+  </div>
+</div>

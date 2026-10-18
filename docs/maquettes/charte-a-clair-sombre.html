@@ -1,0 +1,52 @@
+<h2>Charte A — mode clair et mode sombre</h2>
+<p class="subtitle">Bouton ☀️/🌙 en haut à droite. Par défaut, le site suit le réglage de l'appareil ; le choix du visiteur est mémorisé dans son navigateur. Détail pluie inventé.</p>
+
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  .A { --bg:#f6f1e7; --ink:#1f2a2e; --muted:#5b6668; --soft:#7a8487; --line:#d8cfbd; --brand:#1f4f5f; --accent:#b4532a; --chip:#fff; --rain:#2f6f8f;
+       background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; padding: 24px; border-radius: 14px; }
+  .A.dark { --bg:#141a1d; --ink:#ece6da; --muted:#a7b0ad; --soft:#8a9491; --line:#2f3a3d; --brand:#8cc7d6; --accent:#f08a5d; --chip:#1d2528; --rain:#6fb3d2; }
+  .A .top { display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+  .A .brand { font-family: Fraunces, serif; font-size: 21px; font-weight: 700; color: var(--brand); }
+  .A .nav { font-size: 13px; color: var(--muted); display: flex; gap: 14px; }
+  .A .nav b { color: var(--ink); }
+  .A .place { margin-left: auto; font-size: 13px; background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+  .A .toggle { display: flex; background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 2px; font-size: 13px; }
+  .A .toggle span { padding: 3px 8px; border-radius: 999px; }
+  .A .toggle .on { background: var(--ink); color: var(--bg); }
+  .A h1 { font-family: Fraunces, serif; font-weight: 500; font-size: 27px; line-height: 1.2; margin: 20px 0 16px; }
+  .A h1 em { font-style: normal; color: var(--accent); }
+  .A .grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--ink); }
+  .A .t { padding: 12px 14px 4px 0; border-right: 1px solid var(--line); margin-right: 14px; }
+  .A .t:last-child { border-right: none; }
+  .A .k { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--soft); }
+  .A .v { font-family: Fraunces, serif; font-size: 28px; font-weight: 700; margin: 4px 0; }
+  .A .s { font-size: 12.5px; color: var(--muted); }
+  .A .rainbars { display: flex; gap: 4px; align-items: flex-end; height: 40px; margin-top: 8px; }
+  .A .rainbars i { flex: 1; background: var(--rain); border-radius: 3px 3px 1px 1px; display: block; }
+</style>
+
+<div style="display:grid;gap:18px">
+  <div class="A">
+    <div class="top"><div class="brand">Nom à trouver</div><div class="nav"><b>Accueil</b><span>Eau</span><span>Températures</span></div><div class="place">📍 Tiercé · 10 km</div><div class="toggle"><span class="on">☀️</span><span>🌙</span></div></div>
+    <h1>Un peu de pluie attendue mercredi, mais la nappe reste <em>basse</em> pour la mi-octobre.</h1>
+    <div class="grid">
+      <div class="t"><div class="k">Pluie · 7 jours</div><div class="v">11,4 mm</div><div class="s">surtout mercredi 21</div><div class="rainbars"><i style="height:6%"></i><i style="height:4%"></i><i style="height:20%"></i><i style="height:50%"></i><i style="height:100%"></i><i style="height:26%"></i><i style="height:8%"></i></div></div>
+      <div class="t"><div class="k">Aujourd'hui</div><div class="v">6° / 15°</div><div class="s">gel possible jeudi</div></div>
+      <div class="t"><div class="k">Nappe · Cheffes</div><div class="v">Basse</div><div class="s">4,62 m sous le sol</div></div>
+      <div class="t"><div class="k">La Sarthe · Châteauneuf</div><div class="v">2,99 m</div><div class="s">niveau réglé par un ouvrage</div></div>
+    </div>
+  </div>
+
+  <div class="A dark">
+    <div class="top"><div class="brand">Nom à trouver</div><div class="nav"><b>Accueil</b><span>Eau</span><span>Températures</span></div><div class="place">📍 Tiercé · 10 km</div><div class="toggle"><span>☀️</span><span class="on">🌙</span></div></div>
+    <h1>Un peu de pluie attendue mercredi, mais la nappe reste <em>basse</em> pour la mi-octobre.</h1>
+    <div class="grid">
+      <div class="t"><div class="k">Pluie · 7 jours</div><div class="v">11,4 mm</div><div class="s">surtout mercredi 21</div><div class="rainbars"><i style="height:6%"></i><i style="height:4%"></i><i style="height:20%"></i><i style="height:50%"></i><i style="height:100%"></i><i style="height:26%"></i><i style="height:8%"></i></div></div>
+      <div class="t"><div class="k">Aujourd'hui</div><div class="v">6° / 15°</div><div class="s">gel possible jeudi</div></div>
+      <div class="t"><div class="k">Nappe · Cheffes</div><div class="v">Basse</div><div class="s">4,62 m sous le sol</div></div>
+      <div class="t"><div class="k">La Sarthe · Châteauneuf</div><div class="v">2,99 m</div><div class="s">niveau réglé par un ouvrage</div></div>
+    </div>
+  </div>
+</div>
