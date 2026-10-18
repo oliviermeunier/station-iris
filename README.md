@@ -9,6 +9,8 @@ Station Iris est un site gratuit, sans publicité et sans cookie. On choisit une
 - **le niveau des nappes** mesuré par les piézomètres proches, dessiné comme un réservoir entre l'année la plus sèche et la plus humide connues à cette date ;
 - **les rivières** : carte des stations et profil de la rivière la plus proche, de l'amont vers l'aval, avec le débit quand il est publié.
 
+On peut aussi **chercher une rivière ou une nappe** par son nom et voir toutes ses stations, de la source à l'aval pour une rivière.
+
 Chaque donnée est située par rapport au **minimum, au maximum et à la moyenne connus à la même date** les années précédentes, dans des graphiques que l'on peut zoomer et parcourir.
 
 > **Bêta.** Le site fonctionne mais reste jeune. Limites connues plus bas.
@@ -51,6 +53,8 @@ pnpm dev                         # http://localhost:5173/?c=49347 (Tiercé)
 pnpm test
 pnpm build
 ```
+
+Les index de recherche des nappes et des rivières (`web/src/data/index-*.json`) se régénèrent avec `node scripts/build-indexes.mjs` (quelques minutes, à relancer de temps en temps).
 
 Options de construction (variables d'environnement, facultatives) :
 

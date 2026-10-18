@@ -288,3 +288,13 @@ button { font: inherit; color: inherit; }
   .t-max { font-size: 19px; }
   .t-min { font-size: 15px; }
 }
+
+/* ---------- aquifer / river search ---------- */
+.water-search { margin: 4px 0 18px; max-width: 560px; }
+.water-search .search { max-width: none; }
+
+.marker-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--river); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--soft); }
+.map.compact .marker-label { display: none; }
+.map.compact .marker:hover .marker-label, .map.compact .marker.hl .marker-label { display: block; position: relative; z-index: 2; }
+.gauge { flex: 0 0 96px; }
+.gauge-label { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

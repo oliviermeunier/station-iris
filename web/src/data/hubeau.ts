@@ -119,6 +119,27 @@ export async function piezoSeries(code: string, now = new Date()): Promise<Point
     .map((r) => [r.date_mesure, r.profondeur_nappe as number]);
 }
 
+/** Active piezometers measuring one groundwater body (code of the "masse d'eau"). */
+export async function piezoStationsByNappe(code: string): Promise<PiezoStation[]> {
+  const url = `${BASE}/v1/niveaux_nappes/stations?${query({
+    codes_masse_eau_edl: code,
+    size: 500,
+    fields: 'code_bss,nom_commune,x,y,date_fin_mesure,noms_masse_eau_edl',
+  })}`;
+  return parsePiezoStations(await allPages<RawPiezo>(url, 7 * DAY));
+}
+
+/** Stations in service on one river (Sandre river code). */
+export async function hydroStationsByRiver(code: string): Promise<HydroStation[]> {
+  const url = `${BASE}/v2/hydrometrie/referentiel/stations?${query({
+    code_cours_eau: code,
+    en_service: true,
+    size: 500,
+    fields: 'code_station,libelle_station,libelle_cours_eau,longitude_station,latitude_station',
+  })}`;
+  return parseHydroStations(await allPages<RawHydro>(url, 7 * DAY));
+}
+
 export async function hydroStations(bbox: number[]): Promise<HydroStation[]> {
   const url = `${BASE}/v2/hydrometrie/referentiel/stations?${query({
     bbox: bboxParam(bbox),

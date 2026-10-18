@@ -9,7 +9,7 @@ import { renderHome } from './pages/home';
 import { requirePlace } from './pages/common';
 import { renderTemperatures } from './pages/temperatures';
 import { renderWater } from './pages/water';
-import { parseRoute } from './router';
+import { hashParams, parseRoute } from './router';
 import { h } from './ui/dom';
 import { renderShell } from './ui/layout';
 import { leavePage } from './ui/lifecycle';
@@ -32,9 +32,16 @@ async function main() {
     const route = parseRoute(location.hash);
     shell.setRoute(route);
     shell.refreshPlace();
+    const params = hashParams(location.hash);
+    // A searched aquifer or river needs no place: shareable links work for anyone.
+    if (route === 'nappes' && (params.has('nappe') || params.has('riviere'))) {
+      renderWater(shell.main, currentPlace(), params);
+      window.scrollTo({ top: 0 });
+      return;
+    }
     const place = requirePlace(shell.main);
     if (!place) return;
-    if (route === 'nappes') renderWater(shell.main, place);
+    if (route === 'nappes') renderWater(shell.main, place, params);
     else if (route === 'meteo') renderTemperatures(shell.main, place);
     else renderHome(shell.main, place);
     window.scrollTo({ top: 0 });

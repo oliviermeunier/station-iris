@@ -23,14 +23,15 @@ export interface StationMap {
   highlight(id: string | null): void;
 }
 
-/** IGN base map around a place with the radius circle and HTML markers. */
+/** IGN base map with HTML markers; around a place (with the radius circle) when one is given. */
 export function stationMap(
-  place: Place,
+  place: Place | null,
   markers: MapMarker[],
   hooks: { onHover?: (id: string | null) => void; onSelect?: (id: string) => void } = {},
 ): StationMap {
   const el = document.createElement('div');
-  el.className = 'map';
+  // Many stations: show symbols only, names on hover / selection.
+  el.className = markers.length > 12 ? 'map compact' : 'map';
   const byId = new Map<string, HTMLElement>();
 
   // Leaflet needs the element in the document and sized: build on first layout.
@@ -38,22 +39,27 @@ export function stationMap(
     if (el.clientWidth === 0 || el.dataset.ready) return;
     el.dataset.ready = '1';
     observer.disconnect();
-    const center: L.LatLngExpression = [place.lat, place.lon];
+    const first = markers[0];
+    const center: L.LatLngExpression = place ? [place.lat, place.lon] : first ? [first.lat, first.lon] : [46.6, 2.4];
     // A view must exist before layers that need projection (circle bounds, markers).
-    const map = L.map(el, { scrollWheelZoom: false, attributionControl: true }).setView(center, 11);
+    // No zoom animation: leaving the page mid-animation would make Leaflet throw after removal.
+    const map = L.map(el, { scrollWheelZoom: false, attributionControl: true, zoomAnimation: false }).setView(center, 11);
     L.tileLayer(IGN_PLAN, {
       maxZoom: 18,
       attribution: '© <a href="https://www.ign.fr/">IGN</a> Plan IGN',
     }).addTo(map);
-    const circle = L.circle(center, {
-      radius: RADIUS_KM * 1000,
-      color: getComputedStyle(document.documentElement).getPropertyValue('--soft').trim() || '#888',
-      weight: 1,
-      dashArray: '4 4',
-      fill: false,
-    }).addTo(map);
-    L.circleMarker(center, { radius: 5, color: '#b4532a', fillColor: '#b4532a', fillOpacity: 1 }).addTo(map).bindTooltip(escapeHtml(place.label));
-    const bounds = circle.getBounds();
+    let bounds = L.latLngBounds([center, center]);
+    if (place) {
+      const circle = L.circle(center, {
+        radius: RADIUS_KM * 1000,
+        color: getComputedStyle(document.documentElement).getPropertyValue('--soft').trim() || '#888',
+        weight: 1,
+        dashArray: '4 4',
+        fill: false,
+      }).addTo(map);
+      L.circleMarker(center, { radius: 5, color: '#b4532a', fillColor: '#b4532a', fillOpacity: 1 }).addTo(map).bindTooltip(escapeHtml(place.label));
+      bounds = circle.getBounds();
+    }
     for (const m of markers) {
       const wrapper = document.createElement('div');
       wrapper.className = 'marker';

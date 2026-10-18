@@ -15,7 +15,17 @@ import {
   type Position,
   type RiverStation,
 } from './core';
-import { hydroLatest, hydroSeries, hydroStations, piezoSeries, piezoStations, type Grandeur, type PiezoStation } from './data/hubeau';
+import {
+  hydroLatest,
+  hydroSeries,
+  hydroStations,
+  hydroStationsByRiver,
+  piezoSeries,
+  piezoStations,
+  piezoStationsByNappe,
+  type Grandeur,
+  type PiezoStation,
+} from './data/hubeau';
 import { forecast, history, mergeDaily, recent, type DailySeries, type Forecast } from './data/openmeteo';
 import type { Place } from './location';
 
@@ -177,7 +187,21 @@ export function loadPiezoDetail(station: PiezoStation): Promise<PiezoDetail> {
   });
 }
 
+/** Active piezometers of one groundwater body. */
+export function loadNappe(code: string): Promise<PiezoStation[]> {
+  return once(`n:${code}`, () => piezoStationsByNappe(code));
+}
+
 // ---------- rivers ----------
+
+/** Every station in service on one river, upstream to downstream (Sandre codes grow downstream). */
+export function loadRiverStations(code: string): Promise<RiverStation[]> {
+  return once(`r:${code}`, async () =>
+    (await hydroStationsByRiver(code))
+      .map((s) => ({ code: s.code, name: s.name, river: code, lat: s.lat, lon: s.lon }))
+      .sort((a, b) => a.code.localeCompare(b.code)),
+  );
+}
 
 export interface RiverSet {
   /** Stations within the radius, nearest first. */

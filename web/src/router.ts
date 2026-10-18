@@ -8,6 +8,12 @@ export function parseRoute(hash: string): Route {
   return 'home';
 }
 
+/** Parameters after `?` in the hash, e.g. `#/nappes?riviere=M---0060`. */
+export function hashParams(hash: string): URLSearchParams {
+  const i = hash.indexOf('?');
+  return new URLSearchParams(i >= 0 ? hash.slice(i + 1) : '');
+}
+
 export function routeHref(route: Route): string {
   return route === 'home' ? '#/' : `#/${route}`;
 }
