@@ -7,9 +7,9 @@ export function num(x: number, digits = 1): string {
   return nf(digits).format(x).replace(/ /g, ' ');
 }
 
-/** Depth to water, always explicit about being below ground. */
+/** Depth to water, always explicit; a negative depth means the water stands above ground. */
 export function depth(m: number): string {
-  return `${num(m, 2)} m sous le sol`;
+  return m < 0 ? `${num(-m, 2)} m au-dessus du sol` : `${num(m, 2)} m sous le sol`;
 }
 
 export function mm(x: number): string {

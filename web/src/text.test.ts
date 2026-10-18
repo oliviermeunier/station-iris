@@ -5,6 +5,7 @@ import { depth, mm, positionLabel } from './text';
 describe('text', () => {
   it('depth is explicit', () => {
     expect(depth(4.62)).toBe('4,62 m sous le sol');
+    expect(depth(-0.1)).toBe('0,10 m au-dessus du sol');
   });
   it('mm', () => {
     expect(mm(11.4)).toBe('11 mm');
