@@ -97,18 +97,32 @@ export async function recent(lat: number, lon: number): Promise<DailySeries> {
   return parseDaily(await fetchJson<RawResponse>(url, 3 * HOUR));
 }
 
-/** Reference period: the last 30 complete years, plus the current year to date. */
-export async function history(lat: number, lon: number, now = new Date()): Promise<DailySeries> {
-  const year = now.getFullYear();
-  const url = `https://archive-api.open-meteo.com/v1/archive?${query({
+/**
+ * Complete reference years. Open-Meteo weighs a request by its time span (≈ one call per
+ * two weeks), so 30 years would cost ~780 calls — more than the free 600/minute. Ten
+ * years (~260) is the affordable compromise; completed years are cached for a month.
+ */
+export const REFERENCE_YEARS = 10;
+
+function archiveUrl(lat: number, lon: number, start: string, end: string): string {
+  return `https://archive-api.open-meteo.com/v1/archive?${query({
     latitude: coord(lat),
     longitude: coord(lon),
-    start_date: `${year - 30}-01-01`,
-    end_date: isoDate(daysAgo(6, now)),
+    start_date: start,
+    end_date: end,
     daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration',
     timezone: 'Europe/Paris',
   })}`;
-  return parseDaily(await fetchJson<RawResponse>(url, DAY));
+}
+
+/** Reference years plus the current year to date (archive lags by a few days). */
+export async function history(lat: number, lon: number, now = new Date()): Promise<DailySeries> {
+  const year = now.getFullYear();
+  const [past, current] = await Promise.all([
+    fetchJson<RawResponse>(archiveUrl(lat, lon, `${year - REFERENCE_YEARS}-01-01`, `${year - 1}-12-31`), 30 * DAY),
+    fetchJson<RawResponse>(archiveUrl(lat, lon, `${year}-01-01`, isoDate(daysAgo(6, now))), DAY),
+  ]);
+  return mergeDaily(parseDaily(past), parseDaily(current));
 }
 
 /** Archive first, then recent days for dates the archive does not have yet. */

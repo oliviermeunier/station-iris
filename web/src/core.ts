@@ -47,8 +47,12 @@ export function envelopeAt(history: Point[], target: string): Envelope | null {
 }
 
 /** 365 entries indexed by `dayIndex`, reference = all years except `excludeYear`. */
-export function dayOfYearEnvelopes(history: Point[], excludeYear: number): (Envelope | null)[] {
-  return JSON.parse(wasm.dayOfYearEnvelopes(JSON.stringify(history), excludeYear, HALF_WINDOW_DAYS));
+export function dayOfYearEnvelopes(
+  history: Point[],
+  excludeYear: number,
+  halfWindowDays = HALF_WINDOW_DAYS,
+): (Envelope | null)[] {
+  return JSON.parse(wasm.dayOfYearEnvelopes(JSON.stringify(history), excludeYear, halfWindowDays));
 }
 
 export function dayIndex(date: string): number {

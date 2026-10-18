@@ -111,7 +111,7 @@ button { font: inherit; color: inherit; }
 .tile:last-child { border-right: none; margin-right: 0; }
 .tile:hover .tile-value { color: var(--brand); }
 .kicker { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); }
-.tile-value { font-family: Fraunces, Georgia, serif; font-size: 32px; font-weight: 700; margin: 4px 0 2px; line-height: 1.1; }
+.tile-value { white-space: nowrap; font-family: Fraunces, Georgia, serif; font-size: 32px; font-weight: 700; margin: 4px 0 2px; line-height: 1.1; }
 .tile-note { font-size: 13px; color: var(--muted); }
 .tile-flex { display: flex; gap: 14px; align-items: flex-end; justify-content: space-between; }
 
