@@ -11,9 +11,9 @@ const ign = (layer: string, style = 'normal') =>
 
 // No road map: soft relief, rivers and lakes, place names. Water is what the site is about.
 const BASE_LAYERS: [string, L.TileLayerOptions][] = [
-  [ign('ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'estompage_grayscale'), { maxNativeZoom: 15, opacity: 0.3 }],
-  [ign('HYDROGRAPHY.HYDROGRAPHY'), { minZoom: 6 }],
-  [ign('GEOGRAPHICALNAMES.NAMES'), { minZoom: 6 }],
+  [ign('ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'estompage_grayscale'), { maxNativeZoom: 15, opacity: 0.3, className: 'tiles-relief' }],
+  [ign('HYDROGRAPHY.HYDROGRAPHY'), { minZoom: 6, className: 'tiles-overlay' }],
+  [ign('GEOGRAPHICALNAMES.NAMES'), { minZoom: 6, className: 'tiles-overlay' }],
 ];
 
 export interface MapMarker {

@@ -222,7 +222,9 @@ button { font: inherit; color: inherit; }
 
 /* ---------- map & profile ---------- */
 .map { height: 340px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; z-index: 0; }
-:root[data-theme='dark'] .map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9); }
+/* Dark mode: the light relief would grey the map out; rivers and names are inverted to stay readable. */
+:root[data-theme='dark'] .map .tiles-relief { display: none; }
+:root[data-theme='dark'] .map .tiles-overlay { filter: invert(1) hue-rotate(180deg) brightness(0.95); }
 .marker { display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -100%); cursor: pointer; }
 .marker-label {
   background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
