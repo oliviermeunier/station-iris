@@ -3,7 +3,7 @@ import { selectedSources, setSelectedSources } from '../sources';
 import { h } from './dom';
 
 /** Checkboxes, one per weather model; at least one stays checked. */
-export function sourcePicker(): HTMLElement {
+export function sourcePicker(vertical = false): HTMLElement {
   const selected = new Set(selectedSources());
   const boxes = MODELS.map((m) => {
     const box = h('input', { type: 'checkbox', value: m.id, checked: selected.has(m.id) });
@@ -18,9 +18,9 @@ export function sourcePicker(): HTMLElement {
     return box;
   });
   return h(
-    'div.sources',
+    vertical ? 'div.sources.vertical' : 'div.sources',
     {},
-    h('span.note', {}, 'Sources :'),
+    vertical ? null : h('span.note', {}, 'Sources :'),
     MODELS.map((m, i) => h('label', {}, boxes[i]!, m.label)),
   );
 }

@@ -17,11 +17,19 @@ export function renderTemperatures(main: HTMLElement, place: Place): void {
   const chart = h('div');
   main.replaceChildren(
     head,
-    // One source picker for the whole page: it drives rain and temperatures alike.
-    h('div', {}, h('p.note', {}, 'Prévisions : moyenne des modèles météo cochés. Survolez un jour pour voir le détail par modèle.'), sourcePicker()),
-    sectionShell('Précipitations', '--rain', rain),
-    sectionShell('Températures des 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources, et bande allant de la source la plus basse à la plus haute.'), week),
-    sectionShell('Températures comparées aux années précédentes', '--warm', chart),
+    h(
+      'div.meteo-layout',
+      {},
+      // One source picker for the whole page, in a left column: it drives rain and temperatures alike.
+      h('aside.meteo-side', {}, h('div.side-title', {}, 'Sources des prévisions'), sourcePicker(true), h('p.note', {}, 'Les prévisions affichées sont la moyenne des modèles cochés. Survolez un jour pour le détail par modèle.')),
+      h(
+        'div',
+        {},
+        sectionShell('Précipitations', '--rain', rain),
+        sectionShell('Températures des 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources, et bande allant de la source la plus basse à la plus haute.'), week),
+        sectionShell('Températures comparées aux années précédentes', '--warm', chart),
+      ),
+    ),
   );
   void section(rain, 'Chargement de la pluie…', () => rainSection(place));
 

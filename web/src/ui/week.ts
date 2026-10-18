@@ -70,8 +70,8 @@ export function tempWeek(f: Forecast, selected: string[]): HTMLElement {
         { role: 'listitem', tabindex: 0 },
         h('div.day-name', {}, dayName(dmax.date)),
         h('div.range-wrap', {}, range(dmax, 'max'), range(dmin, 'min')),
-        h('div', {}, h('b', {}, dmax.mean === null ? '—' : deg(dmax.mean))),
-        h('div.day-sub', {}, dmin.mean === null ? '—' : deg(dmin.mean)),
+        h('div.t-max', {}, dmax.mean === null ? '—' : deg(dmax.mean)),
+        h('div.t-min', {}, dmin.mean === null ? '—' : deg(dmin.mean)),
         frost ? h('div.frost', {}, '❄ gel') : null,
         detailRows(f, selected, (md) => {
           const a = md.tmin[i];
