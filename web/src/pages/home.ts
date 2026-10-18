@@ -15,7 +15,7 @@ interface Card {
 }
 
 /** A large summary card linking to its detail page. */
-function card(route: 'eau' | 'temperatures', title: string, color: string): Card {
+function card(route: 'meteo' | 'nappes', title: string, color: string): Card {
   const value = h('div.hcard-value', {}, '…');
   const note = h('div.hcard-note', {}, 'chargement');
   const side = h('div.hcard-side');
@@ -79,10 +79,10 @@ function tempStrip(tmax: DayConsensus[], tmin: DayConsensus[]): HTMLElement {
 
 export function renderHome(main: HTMLElement, place: Place): void {
   const head = h('h1.headline', {}, `${place.label}…`);
-  const rain = card('eau', 'Pluie · 7 jours', '--rain');
-  const temp = card('temperatures', 'Températures', '--warm');
-  const nappe = card('eau', 'Nappe', '--earth');
-  const river = card('eau', 'Rivière', '--river');
+  const rain = card('meteo', 'Précipitations · 7 jours', '--rain');
+  const temp = card('meteo', 'Températures', '--warm');
+  const nappe = card('nappes', 'Nappe', '--earth');
+  const river = card('nappes', 'Rivière', '--river');
   main.replaceChildren(
     head,
     h('p.subline', {}, `Autour de ${place.label}, dans un rayon de 10 km.`),

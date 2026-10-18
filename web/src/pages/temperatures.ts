@@ -8,16 +8,22 @@ import { envelopeChart } from '../ui/envelopeChart';
 import { sourcePicker } from '../ui/sourcePicker';
 import { tempWeek, weekData } from '../ui/week';
 import { sectionShell } from './common';
+import { rainSection } from './water';
 
 export function renderTemperatures(main: HTMLElement, place: Place): void {
   const head = h('div');
+  const rain = h('div');
   const week = h('div');
   const chart = h('div');
   main.replaceChildren(
     head,
-    sectionShell('Les 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources cochées, et bande allant de la source la plus basse à la plus haute. Survolez un jour pour le détail.'), sourcePicker(), week),
-    sectionShell('Comparées aux années précédentes', '--warm', chart),
+    // One source picker for the whole page: it drives rain and temperatures alike.
+    h('div', {}, h('p.note', {}, 'Prévisions : moyenne des modèles météo cochés. Survolez un jour pour voir le détail par modèle.'), sourcePicker()),
+    sectionShell('Précipitations', '--rain', rain),
+    sectionShell('Températures des 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources, et bande allant de la source la plus basse à la plus haute.'), week),
+    sectionShell('Températures comparées aux années précédentes', '--warm', chart),
   );
+  void section(rain, 'Chargement de la pluie…', () => rainSection(place));
 
   void section(head, 'Chargement des prévisions…', async () => {
     const w = await loadWeather(place);

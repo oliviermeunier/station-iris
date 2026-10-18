@@ -23,7 +23,6 @@ import { dateLabel, dayName, depth, escapeHtml, km, mm, num, positionLabel, posi
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { stationMap } from '../ui/map';
-import { sourcePicker } from '../ui/sourcePicker';
 import { tube } from '../ui/tube';
 import { rainWeek, weekData } from '../ui/week';
 import { sectionShell } from './common';
@@ -31,23 +30,20 @@ import { sectionShell } from './common';
 const MAX_PIEZOS = 6;
 
 export function renderWater(main: HTMLElement, place: Place): void {
-  const rain = h('div');
   const nappe = h('div');
   const river = h('div');
   main.replaceChildren(
-    h('h1.headline', { html: `L’eau autour de <em>${escapeHtml(place.label)}</em>` }),
-    sectionShell('Pluie', '--rain', rain),
+    h('h1.headline', { html: `Nappes et rivières autour de <em>${escapeHtml(place.label)}</em>` }),
     sectionShell('Nappe', '--earth', nappe),
     sectionShell('Rivière', '--river', river),
   );
-  void section(rain, 'Chargement de la pluie…', () => rainSection(place));
   void section(nappe, 'Recherche des piézomètres…', () => nappeSection(place));
   void section(river, 'Recherche des stations de rivière…', () => riverSection(place));
 }
 
 // ---------- rain ----------
 
-async function rainSection(place: Place): Promise<Node[]> {
+export async function rainSection(place: Place): Promise<Node[]> {
   const w = await loadWeather(place);
   const week = h('div');
   const verdict = h('p.verdict');
@@ -98,7 +94,6 @@ async function rainSection(place: Place): Promise<Node[]> {
   const cumul = cumulativeByYear(daily);
   return [
     verdict,
-    sourcePicker(),
     week,
     h('h3', {}, 'Les sols se dessèchent-ils ?'),
     balanceRow,

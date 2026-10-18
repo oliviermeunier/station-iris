@@ -34,8 +34,8 @@ async function main() {
     shell.refreshPlace();
     const place = requirePlace(shell.main);
     if (!place) return;
-    if (route === 'eau') renderWater(shell.main, place);
-    else if (route === 'temperatures') renderTemperatures(shell.main, place);
+    if (route === 'nappes') renderWater(shell.main, place);
+    else if (route === 'meteo') renderTemperatures(shell.main, place);
     else renderHome(shell.main, place);
     window.scrollTo({ top: 0 });
   };

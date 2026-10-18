@@ -7,8 +7,8 @@ import { createSearch } from './search';
 
 const PAGES: [Route, string][] = [
   ['home', 'Accueil'],
-  ['eau', 'Eau'],
-  ['temperatures', 'Températures'],
+  ['meteo', 'Météo'],
+  ['nappes', 'Nappes et rivières'],
 ];
 
 export interface Shell {
