@@ -20,14 +20,18 @@ export interface MapMarker {
   id: string;
   lat: number;
   lon: number;
-  /** HTML shown in the marker (label + mini reservoir). */
-  html: HTMLElement;
+  /** HTML shown in the marker (label + mini reservoir); without it the marker is a dot. */
+  html?: HTMLElement;
   title: string;
+  /** Dots only: HTML of the small card shown on hover (must already be escaped). */
+  tip?: string;
 }
 
 export interface StationMap {
   el: HTMLElement;
   highlight(id: string | null): void;
+  /** Dots only: replace the hover card, recolour the dot (CSS class). */
+  update(id: string, tip: string, dotClass?: string): void;
 }
 
 /** IGN base map with HTML markers; around a place (with the radius circle) when one is given. */
@@ -35,11 +39,14 @@ export function stationMap(
   place: Place | null,
   markers: MapMarker[],
   hooks: { onHover?: (id: string | null) => void; onSelect?: (id: string) => void } = {},
+  options: { zoomIn?: number } = {},
 ): StationMap {
   const el = document.createElement('div');
   // Many stations: show symbols only, names on hover / selection.
   el.className = markers.length > 12 ? 'map compact' : 'map';
   const byId = new Map<string, HTMLElement>();
+  const leafletMarkers = new Map<string, L.Marker>();
+  const pending = new Map<string, [string, string | undefined]>();
 
   // Leaflet needs the element in the document and sized: build on first layout.
   const observer = new ResizeObserver(() => {
@@ -68,6 +75,22 @@ export function stationMap(
     }
     for (const m of markers) {
       const wrapper = document.createElement('div');
+      if (!m.html) {
+        // A dot centred exactly on the station; the name and value go in the hover card.
+        wrapper.className = 'station-dot';
+        const marker = L.marker([m.lat, m.lon], {
+          icon: L.divIcon({ html: wrapper, className: '', iconSize: [14, 14], iconAnchor: [7, 7] }),
+          riseOnHover: true,
+        }).addTo(map);
+        marker.bindTooltip(m.tip ?? escapeHtml(m.title), { direction: 'top', offset: [0, -8], className: 'station-tip' });
+        marker.on('mouseover', () => hooks.onHover?.(m.id));
+        marker.on('mouseout', () => hooks.onHover?.(null));
+        marker.on('click', () => hooks.onSelect?.(m.id));
+        byId.set(m.id, wrapper);
+        leafletMarkers.set(m.id, marker);
+        bounds.extend([m.lat, m.lon]);
+        continue;
+      }
       wrapper.className = 'marker';
       wrapper.title = m.title;
       wrapper.append(m.html);
@@ -82,15 +105,35 @@ export function stationMap(
       bounds.extend([m.lat, m.lon]);
     }
     map.fitBounds(bounds, { padding: [24, 40] });
+    // Closer than "everything fits", centred on the place when there is one.
+    if (options.zoomIn) map.setView(place ? center : bounds.getCenter(), map.getZoom() + options.zoomIn);
+    for (const [id, [tip, cls]] of pending) apply(id, tip, cls);
+    pending.clear();
     onLeave(() => map.remove());
   });
   observer.observe(el);
   onLeave(() => observer.disconnect());
 
+  function apply(id: string, tip: string, cls?: string) {
+    leafletMarkers.get(id)?.setTooltipContent(tip);
+    const dot = byId.get(id);
+    if (dot && cls !== undefined) dot.className = `station-dot ${cls}${dot.classList.contains('hl') ? ' hl' : ''}`;
+  }
+
   return {
     el,
     highlight(id) {
       for (const [key, node] of byId) node.classList.toggle('hl', key === id);
+      // Hovering a station elsewhere (river profile) opens its card on the map.
+      for (const [key, marker] of leafletMarkers) {
+        if (key === id) marker.openTooltip();
+        else marker.closeTooltip();
+      }
+    },
+    update(id, tip, dotClass) {
+      // The map is built on first layout: keep updates that arrive before.
+      if (leafletMarkers.size === 0) pending.set(id, [tip, dotClass]);
+      else apply(id, tip, dotClass);
     },
   };
 }

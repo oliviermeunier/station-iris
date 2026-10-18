@@ -108,3 +108,25 @@ export function placePhrase(label: string, prep: 'à' | 'autour de'): [string, s
 export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
+
+/**
+ * "La Sarthe à Spay [Ecluse de Prélandon] - Amont" → place "Spay", detail "Ecluse de Prélandon, amont".
+ * "La Sarthe au Mans [Yssoir]" → place "Le Mans", detail "Yssoir".
+ */
+export function stationParts(name: string): { place: string; detail: string } {
+  const m = /\s(à|au|aux)\s(.*)$/.exec(name);
+  const article = m?.[1] === 'au' ? 'Le ' : m?.[1] === 'aux' ? 'Les ' : '';
+  const details: string[] = [];
+  const rest = (m ? m[2]! : name).replace(/\[([^\]]*)\]/g, (_, d: string) => {
+    details.push(d.trim());
+    return ' ';
+  });
+  const [head = '', ...tail] = rest.split(/\s+-\s+/);
+  details.push(...tail.map((t) => t.trim()));
+  const place = `${article}${head}`.replace(/\s+/g, ' ').trim() || name;
+  const detail = details
+    .filter(Boolean)
+    .map((d, i) => (i === 0 ? capitalize(d) : d.charAt(0).toLowerCase() + d.slice(1)))
+    .join(', ');
+  return { place, detail };
+}

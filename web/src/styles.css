@@ -372,3 +372,24 @@ button { font: inherit; color: inherit; }
 .lv-normal { background: var(--river); }
 .lv-high { background: var(--water); }
 .lv-aboveAll { background: var(--water-2); }
+
+/* ---------- station dots (river map) ---------- */
+.station-dot {
+  width: 14px; height: 14px; border-radius: 50%; box-sizing: border-box; cursor: pointer;
+  background: var(--panel); border: 3px solid var(--soft); transition: transform 0.12s;
+}
+.station-dot.stage { border-color: var(--river); }
+.station-dot.flow { background: var(--river); border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--river); }
+/* Flow stations are coloured by their level, like the river's overall bar. */
+.station-dot.flow.lv-belowAll { background: var(--accent); }
+.station-dot.flow.lv-low { background: color-mix(in srgb, var(--accent) 50%, var(--panel)); }
+.station-dot.flow.lv-normal { background: var(--river); }
+.station-dot.flow.lv-high { background: var(--water); }
+.station-dot.flow.lv-aboveAll { background: var(--water-2); }
+.station-dot.flow[class*='lv-'] { box-shadow: 0 0 0 1px var(--ink); }
+.station-dot.hl, .station-dot:hover { transform: scale(1.45); box-shadow: 0 0 0 2px var(--accent); }
+.leaflet-tooltip.station-tip { font: 13px/1.4 'Inter Variable', Inter, system-ui, sans-serif; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
+.leaflet-tooltip.station-tip .note { font-size: 12px; }
+.leaflet-tooltip-top.station-tip::before { border-top-color: var(--panel); }
+.gauge-top { min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; }
+.gauge-detail { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 15px; }

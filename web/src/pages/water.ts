@@ -22,7 +22,7 @@ import {
   type RiverDetail,
   type RiverLatest,
 } from '../store';
-import { dateLabel, depth, escapeHtml, km, num, placePhrase, positionLabel, positionShort } from '../text';
+import { dateLabel, depth, escapeHtml, km, num, placePhrase, positionLabel, positionShort, stationParts } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { stationMap } from '../ui/map';
@@ -224,8 +224,15 @@ function riverValue(r: RiverLatest | RiverDetail | undefined): string {
 }
 
 function shortName(s: RiverStation): string {
-  const i = s.name.search(/\s(à|au|aux)\s/);
-  return i > 0 ? s.name.slice(i).replace(/^\s(à|au|aux)\s/, '') : s.name;
+  return stationParts(s.name).place;
+}
+
+/** Hover card of a station on the river map. */
+function stationTip(s: RiverStation, riverLabel: string, r: RiverLatest | RiverDetail | null, position: Position | null): string {
+  const { place, detail } = stationParts(s.name);
+  const value = !r ? 'chargement…' : !r.latest ? 'pas de mesure récente' : `${r.grandeur === 'QmnJ' ? 'débit' : 'hauteur'} <b>${riverValue(r)}</b>`;
+  const level = position ? ` · ${positionShort(position, 'debit').toLowerCase()}` : '';
+  return `<b>${escapeHtml(place)}</b>${detail ? `<br><span class="note">${escapeHtml(detail)}</span>` : ''}<br>${escapeHtml(riverLabel)}<br>${value}${level}`;
 }
 
 async function riverSection(place: Place): Promise<(Node | null)[]> {
@@ -313,7 +320,6 @@ function levelView(lv: RiverLevel, done: number, of: number): Node {
 /** One river: upstream→downstream profile, its overall level, a map of its stations and the selected one's detail. */
 function riverExplorer(place: Place | null, stations: RiverStation[], riverLabel: string, firstCode: string): (Node | null)[] {
   const shown = new Map(stations.map((s) => [s.code, s]));
-  const markerEls = new Map<string, HTMLElement>();
   const gaugeEls = new Map<string, HTMLElement>();
   const detailBox = h('div');
 
@@ -329,20 +335,17 @@ function riverExplorer(place: Place | null, stations: RiverStation[], riverLabel
     void section(detailBox, 'Chargement de l’historique…', async () => riverDetail(s, riverLabel, await loadRiverDetail(code)));
   };
 
-  const markers = stations.map((s) => {
-    const html = h('div', {}, h('div.marker-label', {}, `${shortName(s)} · …`), h('div.marker-dot'));
-    markerEls.set(s.code, html);
-    return { id: s.code, lat: s.lat, lon: s.lon, html, title: s.name };
-  });
-  const map = stationMap(place, markers, { onHover: highlight, onSelect: select });
+  const markers = stations.map((s) => ({ id: s.code, lat: s.lat, lon: s.lon, title: s.name, tip: stationTip(s, riverLabel, null, null) }));
+  const map = stationMap(place, markers, { onHover: highlight, onSelect: select }, { zoomIn: 1 });
 
   const gauges = stations.map((s) => {
     const g = h(
       'div.gauge',
       { tabindex: 0, onmouseenter: () => highlight(s.code), onmouseleave: () => highlight(null), onclick: () => select(s.code) },
-      h('div', { style: 'height:44px;display:flex;align-items:flex-end;justify-content:center' }, h('span.loading', {}, '…')),
+      h('div.gauge-top', {}, h('span.loading', {}, '…')),
       h('div.flow-line'),
       h('div.gauge-label', { title: s.name }, shortName(s)),
+      h('div.gauge-detail', { title: s.name }, stationParts(s.name).detail),
       h('div.day-sub', {}, '…'),
     );
     gaugeEls.set(s.code, g);
@@ -364,24 +367,23 @@ function riverExplorer(place: Place | null, stations: RiverStation[], riverLabel
     }
   };
   const loadStation = async (s: RiverStation) => {
-    const m = markerEls.get(s.code);
     const g = gaugeEls.get(s.code);
     try {
       const r = await loadRiverLatest(s.code);
-      m?.replaceChildren(h('div.marker-label', {}, `${shortName(s)} · ${riverValue(r)}`), h('div.marker-dot'));
+      map.update(s.code, stationTip(s, riverLabel, r, null), r.grandeur === 'QmnJ' ? 'flow' : 'stage');
       if (g) {
         g.children[0]!.replaceChildren(h('b', {}, riverValue(r)));
-        g.children[3]!.textContent = r.grandeur === 'QmnJ' ? 'débit' : 'hauteur';
+        g.children[4]!.textContent = r.grandeur === 'QmnJ' ? 'débit' : 'hauteur';
       }
       if (r.grandeur !== 'QmnJ') return;
-      // Flow stations get a mini reservoir once their history is known.
+      // Flow stations get a mini reservoir and a coloured dot once their history is known.
       const d = await loadRiverDetail(s.code);
       if (d.position) positions.push(d.position);
+      map.update(s.code, stationTip(s, riverLabel, d, d.position), d.position ? `flow lv-${d.position}` : 'flow');
       if (d.fill === null) return;
-      g?.children[0]!.replaceChildren(h('div', {}, h('b', {}, riverValue(d))), tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }));
-      m?.replaceChildren(h('div.marker-label', {}, `${shortName(s)} · ${riverValue(d)}`), tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }));
+      g?.children[0]!.replaceChildren(tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }), h('b', {}, riverValue(d)));
     } catch {
-      m?.replaceChildren(h('div.marker-label', {}, `${shortName(s)} · —`), h('div.marker-dot'));
+      map.update(s.code, stationTip(s, riverLabel, { grandeur: 'HIXnJ', latest: null }, null), 'stage');
     }
   };
   // A few stations at a time: a whole river can have dozens.

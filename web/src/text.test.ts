@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { headline } from './synthesis';
-import { depth, litres, mm, placePhrase, positionLabel } from './text';
+import { depth, litres, mm, placePhrase, positionLabel, stationParts } from './text';
 
 describe('text', () => {
   it('depth is explicit', () => {
@@ -42,5 +42,15 @@ describe('placePhrase', () => {
     expect(placePhrase('Près de Cheffes', 'autour de')).toEqual(['près de', 'Cheffes']);
     expect(placePhrase('Près de Cheffes', 'à')).toEqual(['près de', 'Cheffes']);
     expect(placePhrase('Ma position', 'à')).toEqual(['autour de', 'votre position']);
+  });
+});
+
+describe('stationParts', () => {
+  it('splits a station label into place and detail', () => {
+    expect(stationParts('La Sarthe à Spay [Ecluse de Prélandon] - Amont')).toEqual({ place: 'Spay', detail: 'Ecluse de Prélandon, amont' });
+    expect(stationParts('La Sarthe au Mans [Yssoir]')).toEqual({ place: 'Le Mans', detail: 'Yssoir' });
+    expect(stationParts('La Sarthe à Saint-Céneri-le-Gérei - Moulin-du-Désert')).toEqual({ place: 'Saint-Céneri-le-Gérei', detail: 'Moulin-du-Désert' });
+    expect(stationParts('La Sarthe à Cheffes')).toEqual({ place: 'Cheffes', detail: '' });
+    expect(stationParts('[La Voutonne] à Précigné')).toEqual({ place: 'Précigné', detail: '' });
   });
 });
