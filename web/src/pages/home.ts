@@ -1,3 +1,4 @@
+import type { DayConsensus } from '../core';
 import type { Place } from '../location';
 import { routeHref } from '../router';
 import { selectedSources } from '../sources';
@@ -8,30 +9,87 @@ import { h } from '../ui/dom';
 import { tube } from '../ui/tube';
 import { weekData } from '../ui/week';
 
-function tile(route: 'eau' | 'temperatures', kicker: string): { el: HTMLAnchorElement; fill: (value: string, note: string, extra?: Node | null) => void } {
-  const value = h('div.tile-value', {}, '…');
-  const note = h('div.tile-note', {}, 'chargement');
-  const body = h('div', {}, h('div.kicker', {}, kicker), value, note);
-  const el = h('a.tile', { href: routeHref(route) }, h('div.tile-flex', {}, body));
+interface Card {
+  el: HTMLAnchorElement;
+  fill(value: string, noteHtml: string, side?: Node | null, below?: Node | null): void;
+}
+
+/** A large summary card linking to its detail page. */
+function card(route: 'eau' | 'temperatures', title: string, color: string): Card {
+  const value = h('div.hcard-value', {}, '…');
+  const note = h('div.hcard-note', {}, 'chargement');
+  const side = h('div.hcard-side');
+  const below = h('div.hcard-viz');
+  const el = h(
+    'a.hcard',
+    { href: routeHref(route), style: `--c:var(${color})` },
+    h('div.hcard-head', {}, h('span.hcard-title', {}, title), h('span', {}, 'détail →')),
+    h('div.hcard-main', {}, h('div', {}, value, note), side),
+    below,
+  );
   return {
     el,
-    fill(v, n, extra) {
+    fill(v, n, s, b) {
       value.textContent = v;
       note.innerHTML = n;
-      if (extra) el.firstElementChild!.append(extra);
+      side.replaceChildren(...(s ? [s] : []));
+      below.replaceChildren(...(b ? [b] : []));
     },
   };
 }
 
+function dayInitial(iso: string): string {
+  return dayName(iso).slice(0, 3);
+}
+
+function rainBars(days: DayConsensus[]): HTMLElement {
+  const maxMm = Math.max(5, ...days.map((d) => d.mean ?? 0));
+  return h(
+    'div.mini-week',
+    {},
+    days.map((d) =>
+      h(
+        'div.mini-day',
+        {},
+        h('div.mini-bar-wrap', {}, h('div.bar', { style: `height:${((d.mean ?? 0) / maxMm) * 100}%;width:70%` })),
+        h('div.mini-label', {}, dayInitial(d.date)),
+        h('div.mini-sub', {}, d.mean === null ? '—' : num(d.mean, d.mean >= 10 ? 0 : 1)),
+      ),
+    ),
+  );
+}
+
+function tempStrip(tmax: DayConsensus[], tmin: DayConsensus[]): HTMLElement {
+  return h(
+    'div.mini-week',
+    {},
+    tmax.map((d, i) => {
+      const lo = tmin[i]?.mean ?? null;
+      return h(
+        'div.mini-day',
+        {},
+        h('div.mini-label', {}, dayInitial(d.date)),
+        h('div.mini-max', {}, d.mean === null ? '—' : deg(d.mean)),
+        h('div.mini-sub', {}, lo === null ? '—' : deg(lo)),
+        lo !== null && lo <= 0.5 ? h('div.frost', {}, '❄') : null,
+      );
+    }),
+  );
+}
+
 export function renderHome(main: HTMLElement, place: Place): void {
   const head = h('h1.headline', {}, `${place.label}…`);
-  const rain = tile('eau', 'Pluie · 7 jours');
-  const temp = tile('temperatures', 'Aujourd’hui');
-  const nappe = tile('eau', 'Nappe');
-  const river = tile('eau', 'Rivière');
-  main.replaceChildren(head, h('p.subline', {}, `Autour de ${place.label}, dans un rayon de 10 km.`), h('div.tiles', {}, rain.el, temp.el, nappe.el, river.el));
+  const rain = card('eau', 'Pluie · 7 jours', '--rain');
+  const temp = card('temperatures', 'Températures', '--warm');
+  const nappe = card('eau', 'Nappe', '--earth');
+  const river = card('eau', 'Rivière', '--river');
+  main.replaceChildren(
+    head,
+    h('p.subline', {}, `Autour de ${place.label}, dans un rayon de 10 km.`),
+    h('div.cards4', {}, rain.el, temp.el, nappe.el, river.el),
+  );
 
-  const fail = (t: ReturnType<typeof tile>) => () => t.fill('—', 'indisponible pour le moment');
+  const fail = (c: Card) => () => c.fill('—', 'indisponible pour le moment');
   let rainInfo: { total: number; rainiest?: { date: string; mm: number }; frost?: string } | null = null;
   let nappePos: Parameters<typeof headline>[0]['nappe'];
   let nappeDone = false;
@@ -48,12 +106,15 @@ export function renderHome(main: HTMLElement, place: Place): void {
       const rainiest = top && (top.mean ?? 0) >= 1 ? { date: top.date, mm: top.mean ?? 0 } : undefined;
       const frost = data.tmin.find((d) => d.mean !== null && d.mean <= 0.5)?.date;
       rainInfo = { total, rainiest, frost };
-      const maxMm = Math.max(5, ...data.rain.map((d) => d.mean ?? 0));
-      const bars = h('div', { style: 'display:flex;gap:4px;align-items:flex-end;height:42px;width:96px;flex-shrink:0' }, data.rain.map((d) => h('div.bar', { style: `height:${((d.mean ?? 0) / maxMm) * 100}%;width:100%` })));
-      rain.fill(mm(total), rainiest ? `surtout ${dayName(rainiest.date, 'long')}` : 'pas de pluie notable', bars);
+      rain.fill(mm(total), rainiest ? `surtout ${dayName(rainiest.date, 'long')}` : 'pas de pluie notable', null, rainBars(data.rain));
       const t0 = data.tmin[0]?.mean;
       const t1 = data.tmax[0]?.mean;
-      temp.fill(t0 != null && t1 != null ? `${deg(t0)} / ${deg(t1)}` : '—', frost ? `gel possible ${dayName(frost, 'long')}` : 'pas de gel prévu');
+      temp.fill(
+        t0 != null && t1 != null ? `${deg(t0)} / ${deg(t1)}` : '—',
+        `aujourd’hui · ${frost ? `gel possible ${dayName(frost, 'long')}` : 'pas de gel prévu'}`,
+        null,
+        tempStrip(data.tmax, data.tmin),
+      );
       updateHead();
     })
     .catch(() => {
@@ -73,8 +134,10 @@ export function renderHome(main: HTMLElement, place: Place): void {
       nappePos = d.position ?? undefined;
       nappe.fill(
         d.position ? positionShort(d.position, 'nappe') : d.latest ? depth(d.latest[1]) : '—',
-        d.latest ? `${depth(d.latest[1])}<br>${escapeHtml(l.item.commune)} · ${num(l.km, 0)} km` : 'pas de mesure récente',
-        tube({ fill: d.fill, mean: d.meanFill, size: 'tile' }),
+        d.latest
+          ? `l’eau est à <b>${depth(d.latest[1])}</b><br>${escapeHtml(l.item.commune)} · ${num(l.km, 0)} km${d.env ? `<br><span class="note">comparé à ${d.env.years} ans à cette date</span>` : ''}`
+          : 'pas de mesure récente',
+        tube({ fill: d.fill, mean: d.meanFill, size: 'card' }),
       );
     })
     .catch(fail(nappe))
@@ -94,8 +157,12 @@ export function renderHome(main: HTMLElement, place: Place): void {
       const name = escapeHtml(s.name);
       if (!d.latest) river.fill('—', `${name} : pas de mesure récente`);
       else if (d.grandeur === 'QmnJ')
-        river.fill(d.position ? positionShort(d.position, 'debit') : `${num(d.latest[1], 1)} m³/s`, `${num(d.latest[1], 1)} m³/s<br>${name}`, d.fill !== null ? tube({ fill: d.fill, mean: d.meanFill, size: 'tile' }) : null);
-      else river.fill(`${num(d.latest[1], 2)} m`, `${name}<br>hauteur, niveau pouvant être réglé par un ouvrage`);
+        river.fill(
+          d.position ? positionShort(d.position, 'debit') : `${num(d.latest[1], 1)} m³/s`,
+          `débit <b>${num(d.latest[1], 1)} m³/s</b><br>${name}`,
+          d.fill !== null ? tube({ fill: d.fill, mean: d.meanFill, size: 'card' }) : null,
+        );
+      else river.fill(`${num(d.latest[1], 2)} m`, `hauteur d’eau · ${name}<br><span class="note">niveau pouvant être réglé par un ouvrage : pas de comparaison</span>`);
     })
     .catch(fail(river));
 }

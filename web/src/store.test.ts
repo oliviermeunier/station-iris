@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cumulativeByYear, points, withinOrNearest } from './store';
+import { cumulativeByYear, points, rollingBalance, withinOrNearest } from './store';
 
 const flat = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
   Math.hypot(a.lat - b.lat, a.lon - b.lon) * 100;
@@ -14,6 +14,22 @@ describe('withinOrNearest', () => {
     const r = withinOrNearest([{ lat: 0.08, lon: 0 }, { lat: 0.02, lon: 0 }, { lat: 1, lon: 0 }], { lat: 0, lon: 0 }, 10, flat);
     expect(r.inRadius.map((l) => l.item.lat)).toEqual([0.02, 0.08]);
     expect(r.nearestBeyond).toBeNull();
+  });
+});
+
+describe('rollingBalance', () => {
+  it('sums complete windows only', () => {
+    const days: [string, number | null, number | null][] = [
+      ['d1', 1, 2],
+      ['d2', 3, 1],
+      ['d3', null, 1],
+      ['d4', 0, 1],
+      ['d5', 2, 0],
+    ];
+    expect(rollingBalance(days, 2)).toEqual([
+      ['d2', 1],
+      ['d5', 1],
+    ]);
   });
 });
 

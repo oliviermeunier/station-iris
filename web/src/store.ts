@@ -85,6 +85,30 @@ export function points(dates: string[], values: (number | null)[]): Point[] {
   return out;
 }
 
+/**
+ * Rain minus evaporation summed over the `window` days ending on each date.
+ * Only complete windows (every day has both values) produce a point.
+ */
+export function rollingBalance(days: [string, number | null, number | null][], window: number): Point[] {
+  const out: Point[] = [];
+  let sum = 0;
+  let valid = 0;
+  const net = days.map(([, r, e]) => (r !== null && e !== null ? r - e : null));
+  net.forEach((v, i) => {
+    if (v !== null) {
+      sum += v;
+      valid += 1;
+    }
+    const old = i >= window ? net[i - window] : undefined;
+    if (old !== undefined && old !== null) {
+      sum -= old;
+      valid -= 1;
+    }
+    if (i >= window - 1 && valid === window) out.push([days[i]![0], Math.round(sum * 10) / 10]);
+  });
+  return out;
+}
+
 /** Rain accumulated since 1 January, restarting each year. */
 export function cumulativeByYear(series: Point[]): Point[] {
   let year = '';

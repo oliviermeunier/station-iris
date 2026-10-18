@@ -8,7 +8,7 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
 
 const SIZES = {
   mini: { w: 22, h: 40, stroke: 2, r: 5 },
-  tile: { w: 44, h: 96, stroke: 2.5, r: 10 },
+  card: { w: 60, h: 140, stroke: 3, r: 13 },
   full: { w: 64, h: 190, stroke: 3, r: 14 },
 } as const;
 

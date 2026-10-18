@@ -20,7 +20,7 @@ export function deg(x: number): string {
   return `${Math.round(x)}°`;
 }
 
-type Subject = 'nappe' | 'debit' | 'temp';
+type Subject = 'nappe' | 'debit' | 'temp' | 'sol';
 
 const LABELS: Record<Subject, Record<Position, string>> = {
   nappe: {
@@ -36,6 +36,13 @@ const LABELS: Record<Subject, Record<Position, string>> = {
     normal: 'dans la normale',
     high: 'fort',
     aboveAll: 'plus fort que toutes les années connues à cette date',
+  },
+  sol: {
+    belowAll: 'plus sec que toutes les années connues à cette date',
+    low: 'plus sec que d’habitude à cette date',
+    normal: 'comme d’habitude à cette date',
+    high: 'plus humide que d’habitude à cette date',
+    aboveAll: 'plus humide que toutes les années connues à cette date',
   },
   temp: {
     belowAll: 'plus froid que toutes les années connues à cette date',
