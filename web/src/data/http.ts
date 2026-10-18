@@ -36,7 +36,7 @@ export async function fetchJson<T>(url: string, ttlMs: number, timeoutMs = 45_00
           }
           if (!res.ok) throw new HttpError(url, res.status);
           const data = (await res.json()) as T;
-          await cachePut(url, data);
+          cachePut(url, data);
           return data;
         } finally {
           clearTimeout(timer);

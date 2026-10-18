@@ -53,18 +53,26 @@ export function withinOrNearest<T extends { lat: number; lon: number }>(
 
 export interface Weather {
   forecast: Forecast;
-  /** Archive (30 years) + recent days. */
+  /** Archive (reference years) + recent days; empty when the archive is unavailable. */
   daily: DailySeries;
+  /** True when the history could not be loaded (rate limit, outage). */
+  historyMissing: boolean;
 }
 
+const EMPTY_DAILY: DailySeries = { dates: [], tmax: [], tmin: [], rain: [], et0: [] };
+
+/** The forecast is required; history is a bonus that must not take the forecast down with it. */
 export function loadWeather(place: Place): Promise<Weather> {
   return once(`w:${placeKey(place)}`, async () => {
-    const [f, archive, latest] = await Promise.all([
+    const [f, archive, latest] = await Promise.allSettled([
       forecast(place.lat, place.lon),
       history(place.lat, place.lon),
       recent(place.lat, place.lon),
     ]);
-    return { forecast: f, daily: mergeDaily(archive, latest) };
+    if (f.status === 'rejected') throw f.reason;
+    const past = archive.status === 'fulfilled' ? archive.value : EMPTY_DAILY;
+    const now = latest.status === 'fulfilled' ? latest.value : EMPTY_DAILY;
+    return { forecast: f.value, daily: mergeDaily(past, now), historyMissing: archive.status === 'rejected' };
   });
 }
 
@@ -91,16 +99,20 @@ export function cumulativeByYear(series: Point[]): Point[] {
   });
 }
 
-/** `halfWindowDays: 0` for year-to-date totals, whose window must not cross 1 January. */
-export function bandFor(series: Point[], halfWindowDays?: number, now = new Date()): (Envelope | null)[] {
-  return dayOfYearEnvelopes(series, now.getFullYear(), halfWindowDays);
+/**
+ * Reference band: every year except the one the series ends in (the year being judged).
+ * `halfWindowDays: 0` for year-to-date totals, whose window must not cross 1 January.
+ */
+export function bandFor(series: Point[], halfWindowDays?: number): (Envelope | null)[] {
+  const last = series[series.length - 1];
+  const year = last ? Number(last[0].slice(0, 4)) : new Date().getFullYear();
+  return dayOfYearEnvelopes(series, year, halfWindowDays);
 }
 
 // ---------- groundwater ----------
 
 export interface PiezoDetail {
   station: PiezoStation;
-  km: number;
   series: Point[];
   latest: Point | null;
   env: Envelope | null;
@@ -130,13 +142,14 @@ export function piezoVerdict(depthM: number, env: Envelope) {
   };
 }
 
-export function loadPiezoDetail(station: PiezoStation, km: number): Promise<PiezoDetail> {
+/** Memoised per station: distance depends on the place, so callers keep it themselves. */
+export function loadPiezoDetail(station: PiezoStation): Promise<PiezoDetail> {
   return once(`pd:${station.code}`, async () => {
     const series = await piezoSeries(station.code);
     const latest = series[series.length - 1] ?? null;
     const env = latest ? envelopeAt(series, latest[0]) : null;
     const v = latest && env ? piezoVerdict(latest[1], env) : null;
-    return { station, km, series, latest, env, position: v?.position ?? null, fill: v?.fill ?? null, meanFill: v?.meanFill ?? null };
+    return { station, series, latest, env, position: v?.position ?? null, fill: v?.fill ?? null, meanFill: v?.meanFill ?? null };
   });
 }
 

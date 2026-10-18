@@ -84,8 +84,8 @@ export async function forecast(lat: number, lon: number): Promise<Forecast> {
   return parseForecast(await fetchJson<RawResponse>(url, 3 * HOUR));
 }
 
-/** Last 31 days up to today (best-match model analysis) — fills the archive's ~5-day lag. */
-export async function recent(lat: number, lon: number): Promise<DailySeries> {
+/** Last 31 days before today (best-match model analysis) — fills the archive's ~5-day lag. */
+export async function recent(lat: number, lon: number, now = new Date()): Promise<DailySeries> {
   const url = `https://api.open-meteo.com/v1/forecast?${query({
     latitude: coord(lat),
     longitude: coord(lon),
@@ -94,7 +94,14 @@ export async function recent(lat: number, lon: number): Promise<DailySeries> {
     past_days: 31,
     forecast_days: 1,
   })}`;
-  return parseDaily(await fetchJson<RawResponse>(url, 3 * HOUR));
+  // Today is still a forecast: keep observed days only.
+  return keepBefore(parseDaily(await fetchJson<RawResponse>(url, 3 * HOUR)), isoDate(now));
+}
+
+export function keepBefore(s: DailySeries, day: string): DailySeries {
+  const n = s.dates.findIndex((d) => d >= day);
+  if (n < 0) return s;
+  return { dates: s.dates.slice(0, n), tmax: s.tmax.slice(0, n), tmin: s.tmin.slice(0, n), rain: s.rain.slice(0, n), et0: s.et0.slice(0, n) };
 }
 
 /**
@@ -118,11 +125,14 @@ function archiveUrl(lat: number, lon: number, start: string, end: string): strin
 /** Reference years plus the current year to date (archive lags by a few days). */
 export async function history(lat: number, lon: number, now = new Date()): Promise<DailySeries> {
   const year = now.getFullYear();
+  const end = isoDate(daysAgo(6, now));
+  const start = `${year}-01-01`;
   const [past, current] = await Promise.all([
     fetchJson<RawResponse>(archiveUrl(lat, lon, `${year - REFERENCE_YEARS}-01-01`, `${year - 1}-12-31`), 30 * DAY),
-    fetchJson<RawResponse>(archiveUrl(lat, lon, `${year}-01-01`, isoDate(daysAgo(6, now))), DAY),
+    // In the first days of January the archive has nothing for this year yet (end < start → HTTP 400).
+    end >= start ? fetchJson<RawResponse>(archiveUrl(lat, lon, start, end), DAY) : Promise.resolve(null),
   ]);
-  return mergeDaily(parseDaily(past), parseDaily(current));
+  return current ? mergeDaily(parseDaily(past), parseDaily(current)) : parseDaily(past);
 }
 
 /** Archive first, then recent days for dates the archive does not have yet. */

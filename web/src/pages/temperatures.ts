@@ -46,7 +46,7 @@ export function renderTemperatures(main: HTMLElement, place: Place): void {
     ];
   });
 
-  void section(chart, 'Chargement de 30 ans de températures…', async () => {
+  void section(chart, 'Chargement de 10 ans de températures…', async () => {
     const w = await loadWeather(place);
     const make = (kind: 'tmax' | 'tmin') => {
       const series = points(w.daily.dates, w.daily[kind]);

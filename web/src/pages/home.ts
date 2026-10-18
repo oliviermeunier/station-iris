@@ -69,7 +69,7 @@ export function renderHome(main: HTMLElement, place: Place): void {
         nappe.fill('—', 'aucun piézomètre proche');
         return;
       }
-      const d = await loadPiezoDetail(l.item, l.km);
+      const d = await loadPiezoDetail(l.item);
       nappePos = d.position ?? undefined;
       nappe.fill(
         d.position ? positionShort(d.position, 'nappe') : d.latest ? depth(d.latest[1]) : '—',

@@ -2,6 +2,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RADIUS_KM } from '../config';
 import type { Place } from '../location';
+import { escapeHtml } from '../text';
+import { onLeave } from './lifecycle';
 
 const IGN_PLAN =
   'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' +
@@ -50,7 +52,7 @@ export function stationMap(
       dashArray: '4 4',
       fill: false,
     }).addTo(map);
-    L.circleMarker(center, { radius: 5, color: '#b4532a', fillColor: '#b4532a', fillOpacity: 1 }).addTo(map).bindTooltip(place.label);
+    L.circleMarker(center, { radius: 5, color: '#b4532a', fillColor: '#b4532a', fillOpacity: 1 }).addTo(map).bindTooltip(escapeHtml(place.label));
     const bounds = circle.getBounds();
     for (const m of markers) {
       const wrapper = document.createElement('div');
@@ -68,8 +70,10 @@ export function stationMap(
       bounds.extend([m.lat, m.lon]);
     }
     map.fitBounds(bounds, { padding: [24, 40] });
+    onLeave(() => map.remove());
   });
   observer.observe(el);
+  onLeave(() => observer.disconnect());
 
   return {
     el,

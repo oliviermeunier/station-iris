@@ -1,3 +1,6 @@
+// Fonts are served from this site: no request to a third-party font service.
+import '@fontsource-variable/fraunces/opsz.css';
+import '@fontsource-variable/inter';
 import './styles.css';
 import { GOATCOUNTER_URL } from './config';
 import { loadCore } from './core';
@@ -9,6 +12,7 @@ import { renderWater } from './pages/water';
 import { parseRoute } from './router';
 import { h } from './ui/dom';
 import { renderShell } from './ui/layout';
+import { leavePage } from './ui/lifecycle';
 
 async function main() {
   const root = document.getElementById('app')!;
@@ -24,6 +28,7 @@ async function main() {
   }
 
   const render = () => {
+    leavePage();
     const route = parseRoute(location.hash);
     shell.setRoute(route);
     shell.refreshPlace();
@@ -43,7 +48,11 @@ async function main() {
   if (!currentPlace()) render();
 
   if (GOATCOUNTER_URL) {
-    // Cookie-less audience measurement (no consent banner needed).
+    // Cookie-less audience measurement (no consent banner needed). Count the page only:
+    // the query string holds the chosen place and must not reach a third party.
+    (window as unknown as { goatcounter: object }).goatcounter = {
+      path: () => location.pathname + location.hash,
+    };
     const s = document.createElement('script');
     s.async = true;
     s.src = '//gc.zgo.at/count.js';

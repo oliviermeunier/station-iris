@@ -37,12 +37,17 @@ export async function section(
   loadingText: string,
   render: () => Promise<Node | (Node | null)[]>,
 ): Promise<void> {
+  // Only the latest render of a given element may write to it (a slow earlier one is dropped).
+  const seq = String(Number(el.dataset.seq ?? '0') + 1);
+  el.dataset.seq = seq;
   el.replaceChildren(h('p.loading', {}, loadingText));
   try {
     const out = await render();
+    if (el.dataset.seq !== seq) return;
     el.replaceChildren(...(Array.isArray(out) ? out : [out]).filter((n): n is Node => n !== null));
   } catch (err) {
     console.error(err);
+    if (el.dataset.seq !== seq) return;
     el.replaceChildren(
       h('p.error', {}, 'Données indisponibles pour le moment. Réessayez dans quelques minutes.'),
     );

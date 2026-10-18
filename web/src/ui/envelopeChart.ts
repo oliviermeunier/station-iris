@@ -5,6 +5,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { dayIndex, type Envelope, type Point } from '../core';
 import { num } from '../text';
 import { cssVar, h } from './dom';
+import { onLeave } from './lifecycle';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, MarkPointComponent, CanvasRenderer]);
 
@@ -178,16 +179,18 @@ export function envelopeChart(opts: ChartOptions): HTMLElement {
     else chart.resize();
   });
   observer.observe(box);
+  const release = () => {
+    window.removeEventListener('iris:theme', onTheme);
+    observer.disconnect();
+    chart?.dispose();
+    chart = null;
+  };
   const onTheme = () => {
-    if (!box.isConnected) {
-      // The page was replaced: release the chart and stop listening.
-      window.removeEventListener('iris:theme', onTheme);
-      observer.disconnect();
-      chart?.dispose();
-      return;
-    }
-    if (chart) render();
+    // Replaced inside the page (another station picked): release now.
+    if (!box.isConnected) release();
+    else if (chart) render();
   };
   window.addEventListener('iris:theme', onTheme);
+  onLeave(release);
   return wrap;
 }

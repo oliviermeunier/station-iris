@@ -126,13 +126,13 @@ async function nappeSection(place: Place): Promise<(Node | null)[]> {
     const l = list.find((x) => x.item.code === code);
     if (!l) return;
     map.highlight(code);
-    void section(detailBox, 'Chargement des mesures…', async () => piezoDetail(await loadPiezoDetail(l.item, l.km)));
+    void section(detailBox, 'Chargement des mesures…', async () => piezoDetail(await loadPiezoDetail(l.item), l.km));
   };
   const map = stationMap(place, markers, { onSelect: show });
 
   // Fill each mini reservoir as its history arrives.
   for (const l of list) {
-    loadPiezoDetail(l.item, l.km)
+    loadPiezoDetail(l.item)
       .then((d) => {
         const el = markerEls.get(l.item.code);
         if (!el) return;
@@ -145,7 +145,7 @@ async function nappeSection(place: Place): Promise<(Node | null)[]> {
   return [intro, h('div.grid-2', {}, map.el, detailBox)];
 }
 
-function piezoDetail(d: PiezoDetail): (Node | null)[] {
+function piezoDetail(d: PiezoDetail, distanceKm: number): (Node | null)[] {
   const s = d.station;
   if (!d.latest) return [h('p.empty', {}, 'Pas de mesure récente pour ce piézomètre.')];
   const where = `${s.commune || s.code}${s.nappe ? ` — ${s.nappe}` : ''}`;
@@ -162,7 +162,7 @@ function piezoDetail(d: PiezoDetail): (Node | null)[] {
         'div.tube-legend',
         {},
         h('div', {}, h('b', {}, where)),
-        h('div', {}, `à ${km(d.km)} · mesure du ${dateLabel(d.latest[0])}`),
+        h('div', {}, `à ${km(distanceKm)} · mesure du ${dateLabel(d.latest[0])}`),
         d.env ? h('div', {}, `le plus haut connu : ${depth(d.env.min)}`) : null,
         h('div', {}, h('b', {}, `aujourd’hui : ${depth(d.latest[1])}`)),
         d.env ? h('div', {}, `moyenne : ${depth(d.env.mean)} (pointillés)`) : null,
@@ -310,7 +310,9 @@ function riverDetail(s: RiverStation, d: RiverDetail): (Node | null)[] {
             h('div.note', {}, `à cette date (±3 jours), sur ${d.env.years} ans`),
           ),
         )
-      : h('p.note', {}, 'Cette station ne publie que la hauteur d’eau. Elle peut être réglée par un barrage ou une écluse : c’est un repère, pas un indicateur de sécheresse, donc pas de comparaison aux années précédentes.'),
+      : isFlow
+        ? h('p.note', {}, 'Pas assez d’années de mesures à cette date pour comparer ce débit aux années précédentes.')
+        : h('p.note', {}, 'Cette station ne publie que la hauteur d’eau. Elle peut être réglée par un barrage ou une écluse : c’est un repère, pas un indicateur de sécheresse, donc pas de comparaison aux années précédentes.'),
     h('h3', {}, 'Historique'),
     envelopeChart({
       series: d.series,
