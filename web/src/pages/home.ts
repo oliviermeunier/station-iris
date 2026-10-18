@@ -74,7 +74,7 @@ export function renderHome(main: HTMLElement, place: Place): void {
       nappe.fill(
         d.position ? positionShort(d.position, 'nappe') : d.latest ? depth(d.latest[1]) : '—',
         d.latest ? `${depth(d.latest[1])}<br>${escapeHtml(l.item.commune)} · ${num(l.km, 0)} km` : 'pas de mesure récente',
-        tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }),
+        tube({ fill: d.fill, mean: d.meanFill, size: 'tile' }),
       );
     })
     .catch(fail(nappe))
@@ -94,7 +94,7 @@ export function renderHome(main: HTMLElement, place: Place): void {
       const name = escapeHtml(s.name);
       if (!d.latest) river.fill('—', `${name} : pas de mesure récente`);
       else if (d.grandeur === 'QmnJ')
-        river.fill(d.position ? positionShort(d.position, 'debit') : `${num(d.latest[1], 1)} m³/s`, `${num(d.latest[1], 1)} m³/s<br>${name}`, d.fill !== null ? tube({ fill: d.fill, mean: d.meanFill, size: 'mini' }) : null);
+        river.fill(d.position ? positionShort(d.position, 'debit') : `${num(d.latest[1], 1)} m³/s`, `${num(d.latest[1], 1)} m³/s<br>${name}`, d.fill !== null ? tube({ fill: d.fill, mean: d.meanFill, size: 'tile' }) : null);
       else river.fill(`${num(d.latest[1], 2)} m`, `${name}<br>hauteur, niveau pouvant être réglé par un ouvrage`);
     })
     .catch(fail(river));

@@ -6,16 +6,19 @@ function el<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, 
   return e;
 }
 
+const SIZES = {
+  mini: { w: 22, h: 40, stroke: 2, r: 5 },
+  tile: { w: 44, h: 96, stroke: 2.5, r: 10 },
+  full: { w: 64, h: 190, stroke: 3, r: 14 },
+} as const;
+
 /**
  * Vertical reservoir. `fill` in [0, 1]: 0 = driest known at this date, 1 = wettest.
  * `mean` (optional, [0, 1]) draws a dashed line at the average.
  */
-export function tube(opts: { fill: number | null; mean?: number | null; size: 'mini' | 'full' }): SVGSVGElement {
-  const w = opts.size === 'mini' ? 22 : 64;
-  const hgt = opts.size === 'mini' ? 40 : 190;
-  const stroke = opts.size === 'mini' ? 2 : 3;
+export function tube(opts: { fill: number | null; mean?: number | null; size: keyof typeof SIZES }): SVGSVGElement {
+  const { w, h: hgt, stroke, r } = SIZES[opts.size];
   const svg = el('svg', { width: w, height: hgt, viewBox: `0 0 ${w} ${hgt}`, class: 'tube', role: 'img' });
-  const r = opts.size === 'mini' ? 5 : 14;
   const inner = `M${stroke / 2} 0 V${hgt - r} Q${stroke / 2} ${hgt - stroke / 2} ${r} ${hgt - stroke / 2} H${w - r} Q${w - stroke / 2} ${hgt - stroke / 2} ${w - stroke / 2} ${hgt - r} V0`;
   const clipId = `c${Math.random().toString(36).slice(2, 9)}`;
   const clip = el('clipPath', { id: clipId });
