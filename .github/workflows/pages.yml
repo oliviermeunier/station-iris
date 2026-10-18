@@ -1,0 +1,64 @@
+name: Publication sur GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Outils WebAssembly
+        run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - name: Cœur Rust (format, lint, tests)
+        run: cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+      - name: Compilation WebAssembly
+        run: bash scripts/build-wasm.sh
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Site (tests et construction)
+        working-directory: web
+        env:
+          VITE_COFFEE_URL: ${{ vars.COFFEE_URL }}
+          VITE_GOATCOUNTER_URL: ${{ vars.GOATCOUNTER_URL }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm test
+          pnpm build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
