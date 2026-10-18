@@ -79,6 +79,11 @@ button { font: inherit; color: inherit; }
   text-decoration: none; color: var(--muted); padding: 6px 10px; border-radius: 8px; font-weight: 500;
 }
 .nav a[aria-current='page'] { color: var(--ink); background: var(--chip); box-shadow: var(--shadow); }
+.nav a { transition: background-color 0.15s, color 0.15s; }
+.nav a:hover { color: var(--ink); background: color-mix(in srgb, var(--chip) 60%, transparent); }
+.nav a:hover .icon { transform: translateY(-1px); }
+.nav a:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+.nav .icon { transition: transform 0.15s; }
 .top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .place-chip {
   background: var(--chip); border: 1px solid var(--line); border-radius: 999px;
