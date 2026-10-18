@@ -3,12 +3,12 @@
 use std::collections::BTreeSet;
 
 use chrono::{Datelike, NaiveDate};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// Days on each side of the target day that still count as "the same date".
 pub const DEFAULT_HALF_WINDOW_DAYS: u32 = 3;
 
-#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Envelope {
     pub min: f64,
     pub max: f64,
@@ -29,22 +29,36 @@ pub fn envelope_at(
     })
 }
 
-/// Envelope for every day in `[from, to]`, each built from all years other than that day's year.
-/// Used for chart bands, where past years are compared with each other too.
+/// One envelope per calendar day (index 0 = 1 January … 364 = 31 December; 29 February
+/// shares 28 February's), built from every year except `exclude_year`. Chart bands map
+/// any displayed date onto this table.
 #[must_use]
-pub fn envelope_series(
+pub fn day_of_year_envelopes(
     history: &[(NaiveDate, f64)],
-    from: NaiveDate,
-    to: NaiveDate,
+    exclude_year: i32,
     half_window_days: u32,
-) -> Vec<(NaiveDate, Option<Envelope>)> {
-    from.iter_days()
-        .take_while(|day| *day <= to)
-        .map(|day| {
-            let env = envelope_where(history, day, half_window_days, |year| year != day.year());
-            (day, env)
-        })
+) -> Vec<Option<Envelope>> {
+    // 2001 is not a leap year, so it yields exactly 365 calendar days.
+    let Some(first) = NaiveDate::from_ymd_opt(2001, 1, 1) else {
+        return Vec::new();
+    };
+    first
+        .iter_days()
+        .take(365)
+        .map(|day| envelope_where(history, day, half_window_days, |year| year != exclude_year))
         .collect()
+}
+
+/// Index into [`day_of_year_envelopes`] for any date.
+#[must_use]
+pub fn day_index(date: NaiveDate) -> usize {
+    let ordinal = date.ordinal0() as usize;
+    if date.leap_year() && ordinal >= 59 {
+        // 29 February (ordinal0 59) and later shift back by one day.
+        ordinal.saturating_sub(1)
+    } else {
+        ordinal
+    }
 }
 
 fn envelope_where(
@@ -162,11 +176,20 @@ mod tests {
     }
 
     #[test]
-    fn envelope_series_excludes_own_year() {
+    fn day_of_year_envelopes_exclude_given_year() {
         let history = vec![(d(2025, 10, 15), 1.0), (d(2026, 10, 15), 5.0)];
-        let series = envelope_series(&history, d(2025, 10, 15), d(2025, 10, 16), 0);
-        assert_eq!(series.len(), 2);
-        assert_eq!(series[0].1.unwrap().max, 5.0);
-        assert!(series[1].1.is_none());
+        let table = day_of_year_envelopes(&history, 2026, 0);
+        assert_eq!(table.len(), 365);
+        let env = table[day_index(d(2026, 10, 15))].unwrap();
+        assert_eq!(env.max, 1.0);
+        assert!(table[day_index(d(2026, 10, 16))].is_none());
+    }
+
+    #[test]
+    fn day_index_handles_leap_years() {
+        assert_eq!(day_index(d(2026, 1, 1)), 0);
+        assert_eq!(day_index(d(2026, 12, 31)), 364);
+        assert_eq!(day_index(d(2024, 2, 29)), day_index(d(2024, 2, 28)));
+        assert_eq!(day_index(d(2024, 12, 31)), 364);
     }
 }
