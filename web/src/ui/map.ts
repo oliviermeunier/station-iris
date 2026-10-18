@@ -5,9 +5,16 @@ import type { Place } from '../location';
 import { escapeHtml } from '../text';
 import { onLeave } from './lifecycle';
 
-const IGN_PLAN =
-  'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2' +
-  '&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+const ign = (layer: string, style = 'normal') =>
+  `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${layer}&STYLE=${style}` +
+  '&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}';
+
+// No road map: soft relief, rivers and lakes, place names. Water is what the site is about.
+const BASE_LAYERS: [string, L.TileLayerOptions][] = [
+  [ign('ELEVATION.ELEVATIONGRIDCOVERAGE.SHADOW', 'estompage_grayscale'), { maxNativeZoom: 15, opacity: 0.3 }],
+  [ign('HYDROGRAPHY.HYDROGRAPHY'), { minZoom: 6 }],
+  [ign('GEOGRAPHICALNAMES.NAMES'), { minZoom: 6 }],
+];
 
 export interface MapMarker {
   id: string;
@@ -44,10 +51,9 @@ export function stationMap(
     // A view must exist before layers that need projection (circle bounds, markers).
     // No zoom animation: leaving the page mid-animation would make Leaflet throw after removal.
     const map = L.map(el, { scrollWheelZoom: false, attributionControl: true, zoomAnimation: false }).setView(center, 11);
-    L.tileLayer(IGN_PLAN, {
-      maxZoom: 18,
-      attribution: '© <a href="https://www.ign.fr/">IGN</a> Plan IGN',
-    }).addTo(map);
+    BASE_LAYERS.forEach(([url, options], i) =>
+      L.tileLayer(url, { maxZoom: 18, ...options, attribution: i === 0 ? '© <a href="https://www.ign.fr/">IGN</a>' : undefined }).addTo(map),
+    );
     let bounds = L.latLngBounds([center, center]);
     if (place) {
       const circle = L.circle(center, {

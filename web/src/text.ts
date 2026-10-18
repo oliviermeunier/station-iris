@@ -93,3 +93,18 @@ export function km(x: number): string {
 export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 }
+
+/**
+ * Preposition + place name for sentences: "autour de Tiercé", but "près de Cheffes" for a
+ * geolocated place (labelled "Près de Cheffes") and "autour de votre position" without a commune.
+ */
+export function placePhrase(label: string, prep: 'à' | 'autour de'): [string, string] {
+  const near = /^près de\s+/i.exec(label);
+  if (near) return ['près de', label.slice(near[0].length)];
+  if (label === 'Ma position') return ['autour de', 'votre position'];
+  return [prep, label];
+}
+
+export function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}

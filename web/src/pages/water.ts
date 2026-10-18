@@ -18,13 +18,13 @@ import {
   type RiverDetail,
   type RiverLatest,
 } from '../store';
-import { dateLabel, depth, escapeHtml, km, num, positionLabel, positionShort } from '../text';
+import { dateLabel, depth, escapeHtml, km, num, placePhrase, positionLabel, positionShort } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { stationMap } from '../ui/map';
 import { waterSearch } from '../ui/waterSearch';
 import { tube } from '../ui/tube';
-import { sectionShell } from './common';
+import { pageTitle, sectionShell } from './common';
 
 const MAX_PIEZOS = 6;
 
@@ -33,10 +33,10 @@ export function renderNappes(main: HTMLElement, place: Place | null, params: URL
   const search = waterSearch('nappe');
   const code = params.get('nappe');
   if (code) return void renderNappeView(main, search, code, place);
-  if (!place) return void main.replaceChildren(h('h1.headline', {}, 'Nappes'), search);
+  if (!place) return void main.replaceChildren(pageTitle('nappes', 'Nappes'), search);
   const body = h('div');
   main.replaceChildren(
-    h('h1.headline', { html: `Nappes autour de <em>${escapeHtml(place.label)}</em>` }),
+    pageTitle('nappes', `Nappes ${placeHtml(place)}`),
     search,
     sectionShell('Piézomètres proches', '--earth', body),
   );
@@ -48,18 +48,23 @@ export function renderRivers(main: HTMLElement, place: Place | null, params: URL
   const search = waterSearch('riviere');
   const code = params.get('riviere');
   if (code) return void renderRiverView(main, search, code, place);
-  if (!place) return void main.replaceChildren(h('h1.headline', {}, 'Rivières'), search);
+  if (!place) return void main.replaceChildren(pageTitle('rivieres', 'Rivières'), search);
   const body = h('div');
   main.replaceChildren(
-    h('h1.headline', { html: `Rivières autour de <em>${escapeHtml(place.label)}</em>` }),
+    pageTitle('rivieres', `Rivières ${placeHtml(place)}`),
     search,
     sectionShell('Stations de mesure', '--river', body),
   );
   void section(body, 'Recherche des stations de rivière…', () => riverSection(place));
 }
 
+function placeHtml(place: Place): string {
+  const [prep, name] = placePhrase(place.label, 'autour de');
+  return `${prep} <em>${escapeHtml(name)}</em>`;
+}
+
 function backLink(place: Place | null, route: 'nappes' | 'rivieres'): HTMLElement | null {
-  return place ? h('p.note', {}, h('a', { href: routeHref(route) }, `← Revenir autour de ${place.label}`)) : null;
+  return place ? h('p.note', {}, h('a', { href: routeHref(route) }, `← Revenir ${placePhrase(place.label, 'autour de').join(' ')}`)) : null;
 }
 
 async function renderNappeView(main: HTMLElement, search: HTMLElement, code: string, place: Place | null): Promise<void> {
@@ -67,7 +72,7 @@ async function renderNappeView(main: HTMLElement, search: HTMLElement, code: str
   const entry = await byCode('nappe', code).catch(() => null);
   const title = entry?.name ?? code;
   main.replaceChildren(
-    h('h1.headline', { html: `Nappe : <em>${escapeHtml(title)}</em>` }),
+    pageTitle('nappes', `Nappe : <em>${escapeHtml(title)}</em>`),
     backLink(place, 'nappes') ?? '',
     search,
     sectionShell('Piézomètres de cette nappe', '--earth', body),
@@ -94,7 +99,7 @@ async function renderRiverView(main: HTMLElement, search: HTMLElement, code: str
   const entry = await byCode('riviere', code).catch(() => null);
   const title = entry?.name ?? code;
   main.replaceChildren(
-    h('h1.headline', { html: `Rivière : <em>${escapeHtml(title)}</em>` }),
+    pageTitle('rivieres', `Rivière : <em>${escapeHtml(title)}</em>`),
     backLink(place, 'rivieres') ?? '',
     search,
     sectionShell('Stations de mesure, de l’amont vers l’aval', '--river', body),

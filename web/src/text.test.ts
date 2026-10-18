@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { headline } from './synthesis';
-import { depth, litres, mm, positionLabel } from './text';
+import { depth, litres, mm, placePhrase, positionLabel } from './text';
 
 describe('text', () => {
   it('depth is explicit', () => {
@@ -32,5 +32,15 @@ describe('headline', () => {
   it('adds frost', () => {
     const h = headline({ rainTotal: 0, frost: '2026-10-22' });
     expect(h).toMatch(/Gel possible jeudi\.$/);
+  });
+});
+
+describe('placePhrase', () => {
+  it('avoids "autour de Près de …"', () => {
+    expect(placePhrase('Tiercé (49125)', 'autour de')).toEqual(['autour de', 'Tiercé (49125)']);
+    expect(placePhrase('Tiercé (49125)', 'à')).toEqual(['à', 'Tiercé (49125)']);
+    expect(placePhrase('Près de Cheffes', 'autour de')).toEqual(['près de', 'Cheffes']);
+    expect(placePhrase('Près de Cheffes', 'à')).toEqual(['près de', 'Cheffes']);
+    expect(placePhrase('Ma position', 'à')).toEqual(['autour de', 'votre position']);
   });
 });

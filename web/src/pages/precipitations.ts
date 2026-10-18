@@ -3,19 +3,20 @@ import { classify, envelopeAt, waterBalance } from '../core';
 import type { Place } from '../location';
 import { selectedSources } from '../sources';
 import { bandFor, cumulativeByYear, loadWeather, points, rollingBalance } from '../store';
-import { dayName, escapeHtml, litres, mm, num, positionLabel } from '../text';
+import { dayName, escapeHtml, litres, mm, num, placePhrase, positionLabel } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { rainWeek, weekData, windWeek } from '../ui/week';
 import { compass } from '../wind';
-import { forecastLayout, sectionShell } from './common';
+import { forecastLayout, pageTitle, sectionShell } from './common';
 
 export function renderPrecipitations(main: HTMLElement, place: Place): void {
   const rain = h('div');
   const wind = h('div');
   const windChart = h('div');
+  const at = placePhrase(place.label, 'à');
   main.replaceChildren(
-    h('h1.headline', { html: `Précipitations et vent à <em>${escapeHtml(place.label)}</em>` }),
+    pageTitle('precipitations', `Précipitations et vent ${at[0]} <em>${escapeHtml(at[1])}</em>`),
     forecastLayout(
       sectionShell('Précipitations', '--rain', rain),
       sectionShell('Vent des 7 prochains jours', '--wind', wind),

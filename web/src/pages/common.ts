@@ -1,5 +1,6 @@
 import { currentPlace, setPlace, type Place } from '../location';
 import { h } from '../ui/dom';
+import { icon, type Page } from '../ui/icons';
 import { createSearch } from '../ui/search';
 import { sourcePicker } from '../ui/sourcePicker';
 
@@ -32,4 +33,9 @@ export function forecastLayout(...sections: (Node | null)[]): HTMLElement {
     h('aside.meteo-side', {}, h('div.side-title', {}, 'Sources des prévisions'), sourcePicker(true), h('p.note', {}, 'Les prévisions affichées sont la moyenne des modèles cochés. Survolez un jour pour le détail par modèle.')),
     h('div', {}, ...sections),
   );
+}
+
+/** Page title with the page's icon; `html` must already be escaped. */
+export function pageTitle(route: Page, html: string): HTMLElement {
+  return h('h1.headline.with-icon', {}, icon(route), h('span', { html }));
 }

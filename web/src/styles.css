@@ -325,3 +325,22 @@ button { font: inherit; color: inherit; }
   .gust-value { font-size: 17px; }
   .gust-value::after { content: ''; }
 }
+
+/* ---------- icons ---------- */
+.icon { display: inline-block; flex: 0 0 auto; width: 18px; height: 18px; }
+.nav a { display: inline-flex; align-items: center; gap: 6px; }
+.nav .short { display: none; }
+.headline.with-icon { display: flex; align-items: flex-start; gap: 14px; }
+.headline.with-icon .icon { width: 44px; height: 44px; margin-top: -2px; }
+.hcard-title { display: inline-flex; align-items: center; gap: 10px; }
+.hcard-title .icon { width: 34px; height: 34px; }
+
+/* Phones: the menu becomes a tab bar, icon above a short label, every page visible. */
+@media (max-width: 520px) {
+  .nav { overflow: visible; justify-content: space-between; margin: 0; gap: 0; }
+  .nav a { flex: 1 1 0; flex-direction: column; gap: 2px; padding: 6px 2px; font-size: 11px; min-width: 0; }
+  .nav .icon { width: 24px; height: 24px; }
+  .nav .long { display: none; }
+  .nav .short { display: block; white-space: nowrap; }
+  .headline.with-icon .icon { width: 34px; height: 34px; }
+}

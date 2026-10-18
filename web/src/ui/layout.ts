@@ -3,14 +3,15 @@ import { currentPlace, setPlace } from '../location';
 import { routeHref, type Route } from '../router';
 import { currentTheme, toggleTheme } from '../theme';
 import { h } from './dom';
+import { icon, type Page } from './icons';
 import { createSearch } from './search';
 
-const PAGES: [Route, string][] = [
-  ['home', 'Accueil'],
-  ['temperatures', 'Températures'],
-  ['precipitations', 'Précipitations et vent'],
-  ['nappes', 'Nappes'],
-  ['rivieres', 'Rivières'],
+// Label, and a shorter one for the phone tab bar. The logo leads home.
+const PAGES: [Page, string, string][] = [
+  ['temperatures', 'Températures', 'Temp.'],
+  ['precipitations', 'Précipitations et vent', 'Pluie, vent'],
+  ['nappes', 'Nappes', 'Nappes'],
+  ['rivieres', 'Rivières', 'Rivières'],
 ];
 
 export interface Shell {
@@ -20,7 +21,9 @@ export interface Shell {
 }
 
 export function renderShell(root: HTMLElement): Shell {
-  const navLinks = PAGES.map(([r, label]) => h('a', { href: routeHref(r), 'data-route': r }, label));
+  const navLinks = PAGES.map(([r, label, short]) =>
+    h('a', { href: routeHref(r), 'data-route': r, 'aria-label': label }, icon(r), h('span.long', {}, label), h('span.short', {}, short)),
+  );
 
   const placeLabel = h('span', {}, 'Choisir un lieu');
   const popover = h('div.popover', { hidden: true });

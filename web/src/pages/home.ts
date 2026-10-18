@@ -1,12 +1,13 @@
 import type { DayConsensus } from '../core';
 import type { Place } from '../location';
 import { GUST_THRESHOLD_KMH } from '../config';
-import { routeHref, type Route } from '../router';
+import { routeHref } from '../router';
 import { selectedSources } from '../sources';
 import { loadPiezoDetail, loadPiezoStations, loadRiverDetail, loadRivers, loadWeather } from '../store';
 import { headline } from '../synthesis';
-import { dayName, deg, depth, escapeHtml, mm, num, positionShort } from '../text';
+import { capitalize, dayName, deg, depth, escapeHtml, mm, num, placePhrase, positionShort } from '../text';
 import { h } from '../ui/dom';
+import { icon, type Page } from '../ui/icons';
 import { tube } from '../ui/tube';
 import { weekData } from '../ui/week';
 
@@ -16,7 +17,7 @@ interface Card {
 }
 
 /** A large summary card linking to its detail page. */
-function card(route: Route, title: string, color: string): Card {
+function card(route: Page, title: string, color: string): Card {
   const value = h('div.hcard-value', {}, '…');
   const note = h('div.hcard-note', {}, 'chargement');
   const side = h('div.hcard-side');
@@ -24,7 +25,7 @@ function card(route: Route, title: string, color: string): Card {
   const el = h(
     'a.hcard',
     { href: routeHref(route), style: `--c:var(${color})` },
-    h('div.hcard-head', {}, h('span.hcard-title', {}, title), h('span', {}, 'détail →')),
+    h('div.hcard-head', {}, h('span.hcard-title', {}, icon(route), title), h('span', {}, 'détail →')),
     h('div.hcard-main', {}, h('div', {}, value, note), side),
     below,
   );
@@ -80,13 +81,14 @@ function tempStrip(tmax: DayConsensus[], tmin: DayConsensus[]): HTMLElement {
 
 export function renderHome(main: HTMLElement, place: Place): void {
   const head = h('h1.headline', {}, `${place.label}…`);
+  const around = placePhrase(place.label, 'autour de');
   const rain = card('precipitations', 'Précipitations · 7 jours', '--rain');
   const temp = card('temperatures', 'Températures', '--warm');
   const nappe = card('nappes', 'Nappe', '--earth');
   const river = card('rivieres', 'Rivière', '--river');
   main.replaceChildren(
     head,
-    h('p.subline', {}, `Autour de ${place.label}, dans un rayon de 10 km.`),
+    h('p.subline', {}, `${capitalize(around.join(' '))}, dans un rayon de 10 km.`),
     h('div.cards4', {}, rain.el, temp.el, nappe.el, river.el),
   );
 

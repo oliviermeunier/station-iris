@@ -2,14 +2,15 @@ import { classify, envelopeAt } from '../core';
 import type { Place } from '../location';
 import { selectedSources } from '../sources';
 import { bandFor, loadWeather, points } from '../store';
-import { deg, escapeHtml, positionLabel } from '../text';
+import { deg, escapeHtml, placePhrase, positionLabel } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { tempWeek, weekData } from '../ui/week';
-import { forecastLayout, sectionShell } from './common';
+import { forecastLayout, pageTitle, sectionShell } from './common';
 
 export function renderTemperatures(main: HTMLElement, place: Place): void {
   const head = h('div');
+  const at = placePhrase(place.label, 'à');
   const week = h('div');
   const chart = h('div');
   main.replaceChildren(
@@ -39,10 +40,10 @@ export function renderTemperatures(main: HTMLElement, place: Place): void {
     const pos = tmax !== null && env ? positionLabel(classify(tmax, env), 'temp') : null;
     const frostDay = today.tmin.find((d) => d.mean !== null && d.mean <= 0.5);
     const lines: string[] = [];
-    if (tmin !== null && tmax !== null) lines.push(`Aujourd’hui à ${escapeHtml(place.label)} : <em>${deg(tmin)} / ${deg(tmax)}</em>${pos ? `, ${pos}` : ''}.`);
+    if (tmin !== null && tmax !== null) lines.push(`Aujourd’hui ${at[0]} ${escapeHtml(at[1])} : <em>${deg(tmin)} / ${deg(tmax)}</em>${pos ? `, ${pos}` : ''}.`);
     if (frostDay) lines.push('Gel possible dans la semaine.');
     return [
-      h('h1.headline', { html: lines.join(' ') || `Températures à ${escapeHtml(place.label)}` }),
+      pageTitle('temperatures', lines.join(' ') || `Températures ${at[0]} ${escapeHtml(at[1])}`),
       env ? h('p.subline', {}, `Comparaison avec les ${env.years} années précédentes à la même date (±3 jours).`) : null,
     ];
   });
