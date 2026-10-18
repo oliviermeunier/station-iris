@@ -237,7 +237,7 @@ button { font: inherit; color: inherit; }
 .gauge.hl { background: var(--chip); box-shadow: 0 0 0 2px var(--accent); }
 .gauge-label { border-radius: 6px; padding: 1px 4px; display: inline-block; }
 .flow-line { height: 6px; background: var(--river); border-radius: 3px; margin: 6px 0 2px; opacity: 0.7; }
-.leaflet-container { font: inherit; background: var(--bg); }
+.leaflet-container, .map.leaflet-container { font: inherit; background: var(--bg); }
 
 /* ---------- chart ---------- */
 .chart { height: 340px; width: 100%; }
