@@ -69,7 +69,7 @@ export interface Weather {
   historyMissing: boolean;
 }
 
-const EMPTY_DAILY: DailySeries = { dates: [], tmax: [], tmin: [], rain: [], et0: [] };
+const EMPTY_DAILY: DailySeries = { dates: [], tmax: [], tmin: [], rain: [], et0: [], wind: [], gust: [] };
 
 /** The forecast is required; history is a bonus that must not take the forecast down with it. */
 export function loadWeather(place: Place): Promise<Weather> {

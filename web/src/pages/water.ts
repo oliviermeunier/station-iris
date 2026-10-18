@@ -1,13 +1,11 @@
 import { RADIUS_KM } from '../config';
-import { classify, distanceKm, envelopeAt, waterBalance, type RiverStation } from '../core';
+import { distanceKm, type RiverStation } from '../core';
 import { byCode } from '../data/searchIndex';
 import { routeHref } from '../router';
 import type { PiezoStation } from '../data/hubeau';
 import type { Place } from '../location';
-import { selectedSources } from '../sources';
 import {
   bandFor,
-  cumulativeByYear,
   loadPiezoDetail,
   loadPiezoStations,
   loadRiverDetail,
@@ -15,49 +13,53 @@ import {
   loadRivers,
   loadNappe,
   loadRiverStations,
-  loadWeather,
-  points,
-  rollingBalance,
   type Located,
   type PiezoDetail,
   type RiverDetail,
   type RiverLatest,
 } from '../store';
-import { dateLabel, dayName, depth, escapeHtml, km, litres, mm, num, positionLabel, positionShort } from '../text';
+import { dateLabel, depth, escapeHtml, km, num, positionLabel, positionShort } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { stationMap } from '../ui/map';
 import { waterSearch } from '../ui/waterSearch';
 import { tube } from '../ui/tube';
-import { rainWeek, weekData } from '../ui/week';
 import { sectionShell } from './common';
 
 const MAX_PIEZOS = 6;
 
-export function renderWater(main: HTMLElement, place: Place | null, params: URLSearchParams): void {
-  const nappeCode = params.get('nappe');
-  const riverCode = params.get('riviere');
-  const search = waterSearch(nappeCode ? 'nappe' : 'riviere');
-  if (nappeCode) return void renderNappeView(main, search, nappeCode, place);
-  if (riverCode) return void renderRiverView(main, search, riverCode, place);
-  if (!place) {
-    main.replaceChildren(h('h1.headline', {}, 'Nappes et rivières'), search);
-    return;
-  }
-  const nappe = h('div');
-  const river = h('div');
+/** Groundwater page: piezometers around the place, or every piezometer of a searched aquifer. */
+export function renderNappes(main: HTMLElement, place: Place | null, params: URLSearchParams): void {
+  const search = waterSearch('nappe');
+  const code = params.get('nappe');
+  if (code) return void renderNappeView(main, search, code, place);
+  if (!place) return void main.replaceChildren(h('h1.headline', {}, 'Nappes'), search);
+  const body = h('div');
   main.replaceChildren(
-    h('h1.headline', { html: `Nappes et rivières autour de <em>${escapeHtml(place.label)}</em>` }),
+    h('h1.headline', { html: `Nappes autour de <em>${escapeHtml(place.label)}</em>` }),
     search,
-    sectionShell('Nappe', '--earth', nappe),
-    sectionShell('Rivière', '--river', river),
+    sectionShell('Piézomètres proches', '--earth', body),
   );
-  void section(nappe, 'Recherche des piézomètres…', () => nappeSection(place));
-  void section(river, 'Recherche des stations de rivière…', () => riverSection(place));
+  void section(body, 'Recherche des piézomètres…', () => nappeSection(place));
 }
 
-function backLink(place: Place | null): HTMLElement | null {
-  return place ? h('p.note', {}, h('a', { href: routeHref('nappes') }, `← Revenir autour de ${place.label}`)) : null;
+/** River page: stations around the place, or the whole profile of a searched river. */
+export function renderRivers(main: HTMLElement, place: Place | null, params: URLSearchParams): void {
+  const search = waterSearch('riviere');
+  const code = params.get('riviere');
+  if (code) return void renderRiverView(main, search, code, place);
+  if (!place) return void main.replaceChildren(h('h1.headline', {}, 'Rivières'), search);
+  const body = h('div');
+  main.replaceChildren(
+    h('h1.headline', { html: `Rivières autour de <em>${escapeHtml(place.label)}</em>` }),
+    search,
+    sectionShell('Stations de mesure', '--river', body),
+  );
+  void section(body, 'Recherche des stations de rivière…', () => riverSection(place));
+}
+
+function backLink(place: Place | null, route: 'nappes' | 'rivieres'): HTMLElement | null {
+  return place ? h('p.note', {}, h('a', { href: routeHref(route) }, `← Revenir autour de ${place.label}`)) : null;
 }
 
 async function renderNappeView(main: HTMLElement, search: HTMLElement, code: string, place: Place | null): Promise<void> {
@@ -66,7 +68,7 @@ async function renderNappeView(main: HTMLElement, search: HTMLElement, code: str
   const title = entry?.name ?? code;
   main.replaceChildren(
     h('h1.headline', { html: `Nappe : <em>${escapeHtml(title)}</em>` }),
-    backLink(place) ?? '',
+    backLink(place, 'nappes') ?? '',
     search,
     sectionShell('Piézomètres de cette nappe', '--earth', body),
   );
@@ -93,7 +95,7 @@ async function renderRiverView(main: HTMLElement, search: HTMLElement, code: str
   const title = entry?.name ?? code;
   main.replaceChildren(
     h('h1.headline', { html: `Rivière : <em>${escapeHtml(title)}</em>` }),
-    backLink(place) ?? '',
+    backLink(place, 'rivieres') ?? '',
     search,
     sectionShell('Stations de mesure, de l’amont vers l’aval', '--river', body),
   );
@@ -103,82 +105,6 @@ async function renderRiverView(main: HTMLElement, search: HTMLElement, code: str
     const near = place ? [...stations].sort((a, b) => distanceKm(place, a) - distanceKm(place, b))[0]! : stations[0]!;
     return riverExplorer(null, stations, stations, title, near.code);
   });
-}
-
-// ---------- rain ----------
-// ---------- rain ----------
-
-export async function rainSection(place: Place): Promise<Node[]> {
-  const w = await loadWeather(place);
-  const week = h('div');
-  const verdict = h('p.verdict');
-  const draw = () => {
-    const sel = selectedSources();
-    const data = weekData(w.forecast, sel);
-    const total = data.rain.reduce((s, d) => s + (d.mean ?? 0), 0);
-    const rainiest = [...data.rain].sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0))[0];
-    verdict.innerHTML =
-      rainiest && (rainiest.mean ?? 0) >= 1
-        ? `<strong>${mm(total)}</strong> attendus sur 7 jours, surtout <strong>${dayName(rainiest.date, 'long')}</strong> (${rainiest.rainy} source${rainiest.rainy > 1 ? 's' : ''} sur ${rainiest.sources} prévoient de la pluie ce jour-là).`
-        : `<strong>Pas de pluie notable</strong> prévue sur 7 jours (${mm(total)} au total).`;
-    week.replaceChildren(rainWeek(w.forecast, sel));
-  };
-  draw();
-  window.addEventListener('iris:sources', function redraw() {
-    if (!week.isConnected) return window.removeEventListener('iris:sources', redraw);
-    draw();
-  });
-
-  // Drought indicator on observed days.
-  const days: [string, number | null, number | null][] = w.daily.dates.map((d, i) => [d, w.daily.rain[i] ?? null, w.daily.et0[i] ?? null]);
-  const lastComplete = [...days].reverse().find(([, r, e]) => r !== null && e !== null)?.[0];
-  const balances = lastComplete ? [7, 30].map((n) => waterBalance(days, lastComplete, n)) : [];
-  const balanceRow = h(
-    'div.grid-2',
-    {},
-    balances.map((b) => {
-      // Same window on the same dates in previous years: is this drier than usual?
-      const env = lastComplete ? envelopeAt(rollingBalance(days, b.window_days), lastComplete) : null;
-      const usual = env ? positionLabel(classify(b.balance, env), 'sol') : null;
-      const drying = b.balance < 0;
-      // Litres per m² is the same number as mm, but easier to picture.
-      const scale = Math.max(b.rain, b.et0, 1);
-      const flow = (label: string, value: number, cls: string) =>
-        h(
-          'div.flow',
-          {},
-          h('div.flow-label', {}, label),
-          h('div.flow-track', {}, h(`div.flow-bar.${cls}`, { style: `width:${(value / scale) * 100}%` })),
-          h('div.flow-value', {}, `${litres(value)}`),
-        );
-      return h(
-        'div.card',
-        {},
-        h('div.kicker', {}, `${b.window_days} derniers jours`),
-        h('div.balance-value', {}, drying ? 'Les sols s’assèchent' : 'Les sols se rechargent'),
-        flow('Reçu par la pluie', b.rain, 'in'),
-        flow('Perdu par évaporation', b.et0, 'out'),
-        h(
-          'p.tile-note',
-          { html: `Bilan : <b>${num(Math.abs(b.balance), Math.abs(b.balance) >= 10 ? 0 : 1)} litres d’eau ${drying ? 'perdus' : 'gagnés'}</b> par m² de terrain.` },
-        ),
-        usual && env ? h('p.balance-usual', {}, `${usual.charAt(0).toUpperCase()}${usual.slice(1)} (sur ${env.years} ans).`) : null,
-      );
-    }),
-  );
-
-  const daily = points(w.daily.dates, w.daily.rain);
-  const cumul = cumulativeByYear(daily);
-  return [
-    verdict,
-    week,
-    h('h3', {}, 'Les sols se dessèchent-ils ?'),
-    balanceRow,
-    h('p.note', {}, '1 mm de pluie = 1 litre d’eau par m². L’eau perdue est celle qu’une pelouse bien arrosée évapore et transpire dans les mêmes conditions (évapotranspiration de référence). C’est un indicateur général, pas une mesure de l’eau dans votre terrain.'),
-    h('h3', {}, 'Pluie cumulée depuis le 1er janvier'),
-    h('p.note', {}, 'Le total repart de zéro chaque 1er janvier. La bande montre les totaux des années précédentes à la même date : au-dessus, l’année est plus arrosée que d’habitude.'),
-    envelopeChart({ series: cumul, band: bandFor(cumul, 0), unit: 'mm', digits: 0, color: '--rain', bandColor: '--band', seriesName: 'cette année', initialDays: 366, yearly: true }),
-  ];
 }
 
 // ---------- groundwater ----------

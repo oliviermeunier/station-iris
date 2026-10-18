@@ -1,7 +1,8 @@
 import { consensus, type DayConsensus } from '../core';
 import { MODELS, type Forecast, type ModelDays } from '../data/openmeteo';
-import { RAIN_THRESHOLD_MM } from '../config';
+import { GUST_THRESHOLD_KMH, RAIN_THRESHOLD_MM } from '../config';
 import { dayName, deg, mm, num } from '../text';
+import { compass, compassShort, gustWord, meanDirection } from '../wind';
 import { h } from './dom';
 
 export interface WeekData {
@@ -9,17 +10,26 @@ export interface WeekData {
   rain: DayConsensus[];
   tmax: DayConsensus[];
   tmin: DayConsensus[];
+  wind: DayConsensus[];
+  /** `rainy` counts the sources forecasting a gust of at least GUST_THRESHOLD_KMH. */
+  gust: DayConsensus[];
+  /** Mean direction the wind blows from, or null when the sources disagree. */
+  windDir: (number | null)[];
 }
 
 /** Consensus of the selected models, day by day. */
 export function weekData(f: Forecast, selected: string[]): WeekData {
   const models = MODELS.filter((m) => selected.includes(m.id));
   const series = (k: keyof ModelDays) => models.map((m) => f.byModel[m.id]?.[k] ?? []);
+  const dirs = series('windDir');
   return {
     dates: f.dates,
     rain: consensus(series('rain'), f.dates, RAIN_THRESHOLD_MM),
     tmax: consensus(series('tmax'), f.dates),
     tmin: consensus(series('tmin'), f.dates),
+    wind: consensus(series('wind'), f.dates),
+    gust: consensus(series('gust'), f.dates, GUST_THRESHOLD_KMH),
+    windDir: f.dates.map((_, i) => meanDirection(dirs.map((d) => d[i]))),
   };
 }
 
@@ -77,6 +87,42 @@ export function tempWeek(f: Forecast, selected: string[]): HTMLElement {
           const a = md.tmin[i];
           const b = md.tmax[i];
           return a === null || b === null || a === undefined || b === undefined ? '—' : `${num(a, 0)}° / ${num(b, 0)}°`;
+        }),
+      );
+    }),
+  );
+}
+
+export function windWeek(f: Forecast, selected: string[]): HTMLElement {
+  const w = weekData(f, selected);
+  const maxKmh = Math.max(60, ...w.gust.map((d) => d.mean ?? 0));
+  return h(
+    'div.week',
+    { role: 'list' },
+    w.gust.map((g, i) => {
+      const dir = w.windDir[i] ?? null;
+      const wind = w.wind[i]?.mean ?? null;
+      const word = g.mean === null ? '' : gustWord(g.mean);
+      return h(
+        'div.day',
+        { role: 'listitem', tabindex: 0 },
+        h('div.day-name', {}, dayName(g.date)),
+        // The arrow points where the wind goes, like on a weather map.
+        h(
+          'div.wind-dir',
+          { title: dir === null ? 'direction variable' : `vent de ${compass(dir)}` },
+          dir === null ? h('span.wind-var', {}, '~') : h('span.wind-arrow', { style: `transform:rotate(${dir + 180}deg)` }, '↑'),
+          h('small', {}, dir === null ? 'variable' : compassShort(dir)),
+        ),
+        h('div.bar-wrap.short', {}, h('div.bar.gust', { style: `height:${((g.mean ?? 0) / maxKmh) * 100}%` })),
+        h('div.gust-value', {}, g.mean === null ? '—' : num(g.mean, 0)),
+        h('div.day-sub', {}, wind === null ? '' : `moy. ${num(wind, 0)}`),
+        word ? h('div.gust-word', {}, word) : null,
+        h('div.agree', {}, g.sources ? h('span', {}, h('b', {}, `${g.rainy}`), ` sur ${g.sources}`) : '—'),
+        detailRows(f, selected, (md) => {
+          const v = md.gust[i];
+          const d = md.windDir[i];
+          return v === null || v === undefined ? '—' : `${num(v, 0)} km/h${d === null || d === undefined ? '' : ` · ${compassShort(d)}`}`;
         }),
       );
     }),

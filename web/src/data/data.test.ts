@@ -13,6 +13,8 @@ describe('Open-Meteo', () => {
         temperature_2m_min_meteofrance_seamless: [4.2, null],
         precipitation_sum_meteofrance_seamless: [2.75, null],
         temperature_2m_max_gfs_seamless: [14.4, 15.2],
+        wind_gusts_10m_max_gfs_seamless: [46.1, 30.2],
+        wind_direction_10m_dominant_gfs_seamless: [357, 73],
       },
     });
     expect(f.dates).toEqual(['2026-10-18', '2026-10-19']);
@@ -21,10 +23,12 @@ describe('Open-Meteo', () => {
     // A variable the API did not return becomes all-null instead of crashing.
     expect(f.byModel.gfs_seamless!.rain).toEqual([null, null]);
     expect(f.byModel.icon_seamless!.tmin).toEqual([null, null]);
+    expect(f.byModel.gfs_seamless!.gust).toEqual([46.1, 30.2]);
+    expect(f.byModel.gfs_seamless!.windDir).toEqual([357, 73]);
   });
 
   it('mergeDaily appends only dates after the archive', () => {
-    const empty = { tmax: [], tmin: [], rain: [], et0: [] };
+    const empty = { tmax: [], tmin: [], rain: [], et0: [], wind: [], gust: [] };
     const a = { ...empty, dates: ['2026-10-10'], tmax: [10], tmin: [1], rain: [0], et0: [1] };
     const r = {
       dates: ['2026-10-10', '2026-10-11'],
@@ -32,10 +36,14 @@ describe('Open-Meteo', () => {
       tmin: [99, 2],
       rain: [99, 3],
       et0: [99, 1],
+      wind: [99, 20],
+      gust: [99, 45],
     };
     const m = mergeDaily(a, r);
     expect(m.dates).toEqual(['2026-10-10', '2026-10-11']);
     expect(m.tmax).toEqual([10, 12]);
+    // The archive had no wind for that day: the gap stays a gap, the new day is appended.
+    expect(m.gust).toEqual([null, 45]);
   });
 });
 

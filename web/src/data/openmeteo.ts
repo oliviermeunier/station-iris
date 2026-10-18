@@ -16,6 +16,12 @@ export interface ModelDays {
   tmax: (number | null)[];
   tmin: (number | null)[];
   rain: (number | null)[];
+  /** Daily maximum of the mean wind, km/h. */
+  wind: (number | null)[];
+  /** Daily maximum gust, km/h. */
+  gust: (number | null)[];
+  /** Dominant direction the wind blows from, degrees. */
+  windDir: (number | null)[];
 }
 
 export interface Forecast {
@@ -30,12 +36,19 @@ export interface DailySeries {
   tmin: (number | null)[];
   rain: (number | null)[];
   et0: (number | null)[];
+  wind: (number | null)[];
+  gust: (number | null)[];
 }
+
+const SERIES_KEYS = ['tmax', 'tmin', 'rain', 'et0', 'wind', 'gust'] as const;
 
 type RawDaily = Record<string, (number | null)[] | string[]>;
 interface RawResponse {
   daily: RawDaily;
 }
+
+// Up to 10 variables cost no more than one with Open-Meteo's request weighting.
+const OBSERVED = 'temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration,wind_speed_10m_max,wind_gusts_10m_max';
 
 // Two decimals ≈ 1 km: enough for weather, and the exact position never leaves the device.
 const coord = (x: number) => x.toFixed(2);
@@ -52,6 +65,9 @@ export function parseForecast(raw: RawResponse, models: Model[] = MODELS): Forec
       tmax: pick(`temperature_2m_max_${m.id}`),
       tmin: pick(`temperature_2m_min_${m.id}`),
       rain: pick(`precipitation_sum_${m.id}`),
+      wind: pick(`wind_speed_10m_max_${m.id}`),
+      gust: pick(`wind_gusts_10m_max_${m.id}`),
+      windDir: pick(`wind_direction_10m_dominant_${m.id}`),
     };
   }
   return { dates, byModel };
@@ -69,6 +85,8 @@ export function parseDaily(raw: RawResponse): DailySeries {
     tmin: pick('temperature_2m_min'),
     rain: pick('precipitation_sum'),
     et0: pick('et0_fao_evapotranspiration'),
+    wind: pick('wind_speed_10m_max'),
+    gust: pick('wind_gusts_10m_max'),
   };
 }
 
@@ -76,7 +94,7 @@ export async function forecast(lat: number, lon: number): Promise<Forecast> {
   const url = `https://api.open-meteo.com/v1/forecast?${query({
     latitude: coord(lat),
     longitude: coord(lon),
-    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
     models: MODELS.map((m) => m.id).join(','),
     timezone: 'Europe/Paris',
     forecast_days: 7,
@@ -89,7 +107,7 @@ export async function recent(lat: number, lon: number, now = new Date()): Promis
   const url = `https://api.open-meteo.com/v1/forecast?${query({
     latitude: coord(lat),
     longitude: coord(lon),
-    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration',
+    daily: OBSERVED,
     timezone: 'Europe/Paris',
     past_days: 31,
     forecast_days: 1,
@@ -101,7 +119,9 @@ export async function recent(lat: number, lon: number, now = new Date()): Promis
 export function keepBefore(s: DailySeries, day: string): DailySeries {
   const n = s.dates.findIndex((d) => d >= day);
   if (n < 0) return s;
-  return { dates: s.dates.slice(0, n), tmax: s.tmax.slice(0, n), tmin: s.tmin.slice(0, n), rain: s.rain.slice(0, n), et0: s.et0.slice(0, n) };
+  const out = { dates: s.dates.slice(0, n) } as DailySeries;
+  for (const k of SERIES_KEYS) out[k] = s[k].slice(0, n);
+  return out;
 }
 
 /**
@@ -117,7 +137,7 @@ function archiveUrl(lat: number, lon: number, start: string, end: string): strin
     longitude: coord(lon),
     start_date: start,
     end_date: end,
-    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration',
+    daily: OBSERVED,
     timezone: 'Europe/Paris',
   })}`;
 }
@@ -138,20 +158,13 @@ export async function history(lat: number, lon: number, now = new Date()): Promi
 /** Archive first, then recent days for dates the archive does not have yet. */
 export function mergeDaily(archive: DailySeries, latest: DailySeries): DailySeries {
   const last = archive.dates[archive.dates.length - 1] ?? '';
-  const out: DailySeries = {
-    dates: [...archive.dates],
-    tmax: [...archive.tmax],
-    tmin: [...archive.tmin],
-    rain: [...archive.rain],
-    et0: [...archive.et0],
-  };
+  const out = { dates: [...archive.dates] } as DailySeries;
+  // Every series stays aligned on the dates, even if one came back shorter.
+  for (const k of SERIES_KEYS) out[k] = archive.dates.map((_, i) => archive[k]?.[i] ?? null);
   latest.dates.forEach((d, i) => {
     if (d <= last) return;
     out.dates.push(d);
-    out.tmax.push(latest.tmax[i] ?? null);
-    out.tmin.push(latest.tmin[i] ?? null);
-    out.rain.push(latest.rain[i] ?? null);
-    out.et0.push(latest.et0[i] ?? null);
+    for (const k of SERIES_KEYS) out[k].push(latest[k]?.[i] ?? null);
   });
   return out;
 }

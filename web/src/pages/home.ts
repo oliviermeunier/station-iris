@@ -1,6 +1,7 @@
 import type { DayConsensus } from '../core';
 import type { Place } from '../location';
-import { routeHref } from '../router';
+import { GUST_THRESHOLD_KMH } from '../config';
+import { routeHref, type Route } from '../router';
 import { selectedSources } from '../sources';
 import { loadPiezoDetail, loadPiezoStations, loadRiverDetail, loadRivers, loadWeather } from '../store';
 import { headline } from '../synthesis';
@@ -15,7 +16,7 @@ interface Card {
 }
 
 /** A large summary card linking to its detail page. */
-function card(route: 'meteo' | 'nappes', title: string, color: string): Card {
+function card(route: Route, title: string, color: string): Card {
   const value = h('div.hcard-value', {}, '…');
   const note = h('div.hcard-note', {}, 'chargement');
   const side = h('div.hcard-side');
@@ -70,7 +71,7 @@ function tempStrip(tmax: DayConsensus[], tmin: DayConsensus[]): HTMLElement {
         {},
         h('div.mini-label', {}, dayInitial(d.date)),
         h('div.mini-max', {}, d.mean === null ? '—' : deg(d.mean)),
-        h('div.mini-sub', {}, lo === null ? '—' : deg(lo)),
+        h('div.mini-min', {}, lo === null ? '—' : deg(lo)),
         lo !== null && lo <= 0.5 ? h('div.frost', {}, '❄') : null,
       );
     }),
@@ -79,10 +80,10 @@ function tempStrip(tmax: DayConsensus[], tmin: DayConsensus[]): HTMLElement {
 
 export function renderHome(main: HTMLElement, place: Place): void {
   const head = h('h1.headline', {}, `${place.label}…`);
-  const rain = card('meteo', 'Précipitations · 7 jours', '--rain');
-  const temp = card('meteo', 'Températures', '--warm');
+  const rain = card('precipitations', 'Précipitations · 7 jours', '--rain');
+  const temp = card('temperatures', 'Températures', '--warm');
   const nappe = card('nappes', 'Nappe', '--earth');
-  const river = card('nappes', 'Rivière', '--river');
+  const river = card('rivieres', 'Rivière', '--river');
   main.replaceChildren(
     head,
     h('p.subline', {}, `Autour de ${place.label}, dans un rayon de 10 km.`),
@@ -106,7 +107,10 @@ export function renderHome(main: HTMLElement, place: Place): void {
       const rainiest = top && (top.mean ?? 0) >= 1 ? { date: top.date, mm: top.mean ?? 0 } : undefined;
       const frost = data.tmin.find((d) => d.mean !== null && d.mean <= 0.5)?.date;
       rainInfo = { total, rainiest, frost };
-      rain.fill(mm(total), rainiest ? `surtout ${dayName(rainiest.date, 'long')}` : 'pas de pluie notable', null, rainBars(data.rain));
+      const windy = [...data.gust].sort((a, b) => (b.mean ?? 0) - (a.mean ?? 0))[0];
+      const windNote =
+        windy?.mean != null && windy.mean >= GUST_THRESHOLD_KMH ? `<br>rafales jusqu’à <b>${num(windy.mean, 0)} km/h</b> ${dayName(windy.date, 'long')}` : '';
+      rain.fill(mm(total), `${rainiest ? `surtout ${dayName(rainiest.date, 'long')}` : 'pas de pluie notable'}${windNote}`, null, rainBars(data.rain));
       const t0 = data.tmin[0]?.mean;
       const t1 = data.tmax[0]?.mean;
       temp.fill(

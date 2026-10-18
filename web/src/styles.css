@@ -18,6 +18,8 @@
   --earth: #7a5a2f;
   --river: #1f7a6d;
   --frost: #2b6cb0;
+  --wind: #5a6b9a;
+  --wind-band: rgba(90, 107, 154, 0.16);
   --chip: #ffffff;
   --shadow: 0 1px 2px rgba(31, 42, 46, 0.06);
   color-scheme: light;
@@ -40,6 +42,8 @@
   --earth: #d2a86d;
   --river: #5cc2b0;
   --frost: #8ab8f0;
+  --wind: #a9b6e0;
+  --wind-band: rgba(169, 182, 224, 0.18);
   --chip: #1d2528;
   --shadow: none;
   color-scheme: dark;
@@ -138,6 +142,7 @@ button { font: inherit; color: inherit; }
 .mini-label { font-size: 12px; font-weight: 600; text-transform: capitalize; margin-top: 4px; }
 .mini-sub { font-size: 12px; color: var(--soft); }
 .mini-max { font-family: 'Fraunces Variable', Fraunces, Georgia, serif; font-size: 20px; font-weight: 700; color: var(--warm); margin-top: 2px; }
+.mini-min { font-family: 'Fraunces Variable', Fraunces, Georgia, serif; font-size: 20px; font-weight: 700; color: var(--water); }
 
 /* ---------- sections (water / temperatures) ---------- */
 .section { border-top: 2px solid var(--c, var(--ink)); padding: 14px 0 26px; margin-top: 12px; }
@@ -298,3 +303,25 @@ button { font: inherit; color: inherit; }
 .map.compact .marker:hover .marker-label, .map.compact .marker.hl .marker-label { display: block; position: relative; z-index: 2; }
 .gauge { flex: 0 0 96px; }
 .gauge-label { display: block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- wind ---------- */
+.wind-dir { display: flex; flex-direction: column; align-items: center; margin-top: 6px; color: var(--wind); }
+.wind-arrow { display: inline-block; font-size: 24px; font-weight: 700; line-height: 1; }
+.wind-var { font-size: 22px; line-height: 1; }
+.wind-dir small { font-size: 11px; color: var(--muted); }
+.bar-wrap.short { height: 64px; }
+.bar.gust { background: var(--wind); }
+.gust-value { font-family: 'Fraunces Variable', Fraunces, Georgia, serif; font-size: 22px; font-weight: 700; color: var(--wind); line-height: 1.1; }
+.gust-value::after { content: ' km/h'; font-family: 'Inter Variable', Inter, system-ui, sans-serif; font-size: 11px; font-weight: 500; color: var(--muted); }
+.gust-word { color: var(--accent); font-weight: 700; font-size: 12px; }
+
+/* Five pages: on narrow screens the menu scrolls sideways instead of wrapping. */
+@media (max-width: 860px) {
+  .nav { order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; white-space: nowrap; margin: 0 -4px; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: 0 0 auto; padding: 6px 9px; }
+}
+@media (max-width: 520px) {
+  .gust-value { font-size: 17px; }
+  .gust-value::after { content: ''; }
+}

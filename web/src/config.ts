@@ -7,3 +7,5 @@ export const RADIUS_KM = 10;
 export const PROFILE_UP_KM = 30;
 export const PROFILE_DOWN_KM = 10;
 export const RAIN_THRESHOLD_MM = 1;
+/** A gust at least this strong counts as "strong wind" when sources are counted. */
+export const GUST_THRESHOLD_KMH = 50;

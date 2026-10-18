@@ -7,8 +7,9 @@ import { loadCore } from './core';
 import { currentPlace, fromUrl, resolveUrlPlace, setPlace } from './location';
 import { renderHome } from './pages/home';
 import { requirePlace } from './pages/common';
+import { renderPrecipitations } from './pages/precipitations';
 import { renderTemperatures } from './pages/temperatures';
-import { renderWater } from './pages/water';
+import { renderNappes, renderRivers } from './pages/water';
 import { hashParams, parseRoute } from './router';
 import { h } from './ui/dom';
 import { renderShell } from './ui/layout';
@@ -34,16 +35,17 @@ async function main() {
     shell.refreshPlace();
     const params = hashParams(location.hash);
     // A searched aquifer or river needs no place: shareable links work for anyone.
-    if (route === 'nappes' && (params.has('nappe') || params.has('riviere'))) {
-      renderWater(shell.main, currentPlace(), params);
-      window.scrollTo({ top: 0 });
-      return;
+    if (route === 'nappes' && params.has('nappe')) renderNappes(shell.main, currentPlace(), params);
+    else if (route === 'rivieres' && params.has('riviere')) renderRivers(shell.main, currentPlace(), params);
+    else {
+      const place = requirePlace(shell.main);
+      if (!place) return;
+      if (route === 'nappes') renderNappes(shell.main, place, params);
+      else if (route === 'rivieres') renderRivers(shell.main, place, params);
+      else if (route === 'temperatures') renderTemperatures(shell.main, place);
+      else if (route === 'precipitations') renderPrecipitations(shell.main, place);
+      else renderHome(shell.main, place);
     }
-    const place = requirePlace(shell.main);
-    if (!place) return;
-    if (route === 'nappes') renderWater(shell.main, place, params);
-    else if (route === 'meteo') renderTemperatures(shell.main, place);
-    else renderHome(shell.main, place);
     window.scrollTo({ top: 0 });
   };
 

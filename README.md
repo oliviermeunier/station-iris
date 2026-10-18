@@ -2,14 +2,14 @@
 
 **La météo et l'eau près de chez vous, comparées à ce qui a déjà été observé.**
 
-Station Iris est un site gratuit, sans publicité et sans cookie. On choisit une commune (ou on se géolocalise) et le site montre, dans un rayon de 10 km :
+Station Iris est un site gratuit, sans publicité et sans cookie. On choisit une commune (ou on se géolocalise) et le site montre, dans un rayon de 10 km, sur quatre pages :
 
-- **la pluie et les températures des 7 prochains jours**, selon plusieurs modèles météo (Météo-France, ECMWF, ICON, GFS) que l'on peut cocher ou décocher : moyenne des sources, écart entre elles, et nombre de sources qui prévoient de la pluie ;
-- **un indicateur de sécheresse** (pluie moins évaporation sur 7 et 30 jours) et la pluie cumulée depuis le 1er janvier ;
-- **le niveau des nappes** mesuré par les piézomètres proches, dessiné comme un réservoir entre l'année la plus sèche et la plus humide connues à cette date ;
-- **les rivières** : carte des stations et profil de la rivière la plus proche, de l'amont vers l'aval, avec le débit quand il est publié.
+- **Températures** : les 7 prochains jours selon plusieurs modèles météo (Météo-France, ECMWF, ICON, GFS) que l'on peut cocher ou décocher (moyenne des sources et écart entre elles), et les températures comparées aux années précédentes ;
+- **Précipitations et vent** : pluie et rafales des 7 prochains jours, avec le nombre de sources qui prévoient de la pluie ou des rafales d'au moins 50 km/h et la direction du vent ; un indicateur de sécheresse (pluie moins évaporation sur 7 et 30 jours), la pluie cumulée depuis le 1er janvier et le vent comparé aux années précédentes ;
+- **Nappes** : le niveau mesuré par les piézomètres proches, dessiné comme un réservoir entre l'année la plus sèche et la plus humide connues à cette date ;
+- **Rivières** : carte des stations et profil de la rivière la plus proche, de l'amont vers l'aval, avec le débit quand il est publié.
 
-On peut aussi **chercher une rivière ou une nappe** par son nom et voir toutes ses stations, de la source à l'aval pour une rivière.
+Sur les pages Nappes et Rivières, on peut aussi **chercher une nappe ou une rivière** par son nom et voir toutes ses stations, de la source à l'aval pour une rivière.
 
 Chaque donnée est située par rapport au **minimum, au maximum et à la moyenne connus à la même date** les années précédentes, dans des graphiques que l'on peut zoomer et parcourir.
 

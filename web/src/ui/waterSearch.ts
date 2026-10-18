@@ -6,10 +6,12 @@ const PLACEHOLDER: Record<IndexKind, string> = {
   riviere: 'Nom d’une rivière : Sarthe, Loire, Lot…',
 };
 
-/** "Nappe | Rivière" search; picking a result opens its page through the URL hash. */
-export function waterSearch(initial: IndexKind = 'riviere'): HTMLElement {
-  let kind: IndexKind = initial;
-  const input = h('input', { type: 'search', placeholder: PLACEHOLDER[kind], 'aria-label': 'Rechercher une nappe ou une rivière', autocomplete: 'off' });
+const TITLE: Record<IndexKind, string> = { nappe: 'Rechercher une nappe', riviere: 'Rechercher une rivière' };
+const PAGE: Record<IndexKind, string> = { nappe: '#/nappes', riviere: '#/rivieres' };
+
+/** Search among aquifers or rivers; picking a result opens its page through the URL hash. */
+export function waterSearch(kind: IndexKind): HTMLElement {
+  const input = h('input', { type: 'search', placeholder: PLACEHOLDER[kind], 'aria-label': TITLE[kind], autocomplete: 'off' });
   const list = h('ul', { role: 'listbox', hidden: true });
   let results: IndexEntry[] = [];
   let active = -1;
@@ -17,7 +19,7 @@ export function waterSearch(initial: IndexKind = 'riviere'): HTMLElement {
 
   const open = (e: IndexEntry) => {
     list.hidden = true;
-    location.hash = `#/nappes?${kind}=${encodeURIComponent(e.code)}`;
+    location.hash = `${PAGE[kind]}?${kind}=${encodeURIComponent(e.code)}`;
   };
   const draw = () => {
     list.replaceChildren(
@@ -54,17 +56,5 @@ export function waterSearch(initial: IndexKind = 'riviere'): HTMLElement {
   });
   input.addEventListener('blur', () => window.setTimeout(() => (list.hidden = true), 150));
 
-  const pill = (k: IndexKind, label: string) => {
-    const b = h('button', { type: 'button', 'aria-pressed': k === kind }, label);
-    b.addEventListener('click', () => {
-      kind = k;
-      for (const other of pills.querySelectorAll('button')) other.setAttribute('aria-pressed', String(other === b));
-      input.placeholder = PLACEHOLDER[k];
-      input.focus();
-      void run();
-    });
-    return b;
-  };
-  const pills = h('div.chart-tools', {}, pill('riviere', 'Rivière'), pill('nappe', 'Nappe'));
-  return h('div.water-search', {}, h('div.side-title', {}, 'Rechercher une rivière ou une nappe'), pills, h('div.search', {}, input, list));
+  return h('div.water-search', {}, h('div.side-title', {}, TITLE[kind]), h('div.search', {}, input, list));
 }

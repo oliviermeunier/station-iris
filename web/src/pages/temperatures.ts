@@ -5,33 +5,20 @@ import { bandFor, loadWeather, points } from '../store';
 import { deg, escapeHtml, positionLabel } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
-import { sourcePicker } from '../ui/sourcePicker';
 import { tempWeek, weekData } from '../ui/week';
-import { sectionShell } from './common';
-import { rainSection } from './water';
+import { forecastLayout, sectionShell } from './common';
 
 export function renderTemperatures(main: HTMLElement, place: Place): void {
   const head = h('div');
-  const rain = h('div');
   const week = h('div');
   const chart = h('div');
   main.replaceChildren(
     head,
-    h(
-      'div.meteo-layout',
-      {},
-      // One source picker for the whole page, in a left column: it drives rain and temperatures alike.
-      h('aside.meteo-side', {}, h('div.side-title', {}, 'Sources des prévisions'), sourcePicker(true), h('p.note', {}, 'Les prévisions affichées sont la moyenne des modèles cochés. Survolez un jour pour le détail par modèle.')),
-      h(
-        'div',
-        {},
-        sectionShell('Précipitations', '--rain', rain),
-        sectionShell('Températures des 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources, et bande allant de la source la plus basse à la plus haute.'), week),
-        sectionShell('Températures comparées aux années précédentes', '--warm', chart),
-      ),
+    forecastLayout(
+      sectionShell('Températures des 7 prochains jours', '--warm', h('p.note', {}, 'Pour chaque jour : moyenne des sources, et bande allant de la source la plus basse à la plus haute.'), week),
+      sectionShell('Températures comparées aux années précédentes', '--warm', chart),
     ),
   );
-  void section(rain, 'Chargement de la pluie…', () => rainSection(place));
 
   void section(head, 'Chargement des prévisions…', async () => {
     const w = await loadWeather(place);
