@@ -19,7 +19,7 @@ import {
   type RiverDetail,
   type RiverLatest,
 } from '../store';
-import { dateLabel, dayName, depth, escapeHtml, km, mm, num, positionLabel, positionShort } from '../text';
+import { dateLabel, dayName, depth, escapeHtml, km, litres, mm, num, positionLabel, positionShort } from '../text';
 import { h, section } from '../ui/dom';
 import { envelopeChart } from '../ui/envelopeChart';
 import { stationMap } from '../ui/map';
@@ -75,15 +75,27 @@ export async function rainSection(place: Place): Promise<Node[]> {
       // Same window on the same dates in previous years: is this drier than usual?
       const env = lastComplete ? envelopeAt(rollingBalance(days, b.window_days), lastComplete) : null;
       const usual = env ? positionLabel(classify(b.balance, env), 'sol') : null;
-      const deficit = b.balance < 0;
+      const drying = b.balance < 0;
+      // Litres per m² is the same number as mm, but easier to picture.
+      const scale = Math.max(b.rain, b.et0, 1);
+      const flow = (label: string, value: number, cls: string) =>
+        h(
+          'div.flow',
+          {},
+          h('div.flow-label', {}, label),
+          h('div.flow-track', {}, h(`div.flow-bar.${cls}`, { style: `width:${(value / scale) * 100}%` })),
+          h('div.flow-value', {}, `${litres(value)}`),
+        );
       return h(
         'div.card',
         {},
         h('div.kicker', {}, `${b.window_days} derniers jours`),
-        h('div.balance-value', {}, `${deficit ? 'Déficit' : 'Excédent'} de ${mm(Math.abs(b.balance))}`),
+        h('div.balance-value', {}, drying ? 'Les sols s’assèchent' : 'Les sols se rechargent'),
+        flow('Reçu par la pluie', b.rain, 'in'),
+        flow('Perdu par évaporation', b.et0, 'out'),
         h(
-          'div.tile-note',
-          { html: `Il est tombé <b>${mm(b.rain)}</b> de pluie, et environ <b>${mm(b.et0)}</b> d’eau se sont évaporés du sol et des plantes : ${deficit ? 'les sols ont <b>perdu</b> de l’eau' : 'les sols ont <b>gagné</b> de l’eau'}.` },
+          'p.tile-note',
+          { html: `Bilan : <b>${num(Math.abs(b.balance), Math.abs(b.balance) >= 10 ? 0 : 1)} litres d’eau ${drying ? 'perdus' : 'gagnés'}</b> par m² de terrain.` },
         ),
         usual && env ? h('p.balance-usual', {}, `${usual.charAt(0).toUpperCase()}${usual.slice(1)} (sur ${env.years} ans).`) : null,
       );
@@ -97,7 +109,7 @@ export async function rainSection(place: Place): Promise<Node[]> {
     week,
     h('h3', {}, 'Les sols se dessèchent-ils ?'),
     balanceRow,
-    h('p.note', {}, 'On compare la pluie tombée à l’eau qu’une pelouse perd en s’évaporant et en transpirant (évapotranspiration de référence). Un déficit veut dire que les sols ont perdu plus d’eau qu’ils n’en ont reçu. C’est un indicateur général, pas une mesure de l’eau dans votre terrain.'),
+    h('p.note', {}, '1 mm de pluie = 1 litre d’eau par m². L’eau perdue est celle qu’une pelouse bien arrosée évapore et transpire dans les mêmes conditions (évapotranspiration de référence). C’est un indicateur général, pas une mesure de l’eau dans votre terrain.'),
     h('h3', {}, 'Pluie cumulée depuis le 1er janvier'),
     h('p.note', {}, 'Le total repart de zéro chaque 1er janvier. La bande montre les totaux des années précédentes à la même date : au-dessus, l’année est plus arrosée que d’habitude.'),
     envelopeChart({ series: cumul, band: bandFor(cumul, 0), unit: 'mm', digits: 0, color: '--rain', bandColor: '--band', seriesName: 'cette année', initialDays: 366, yearly: true }),

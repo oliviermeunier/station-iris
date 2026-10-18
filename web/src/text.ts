@@ -16,6 +16,11 @@ export function mm(x: number): string {
   return `${num(x, x >= 10 ? 0 : 1)} mm`;
 }
 
+/** Same quantity as mm of rain, expressed per square metre. */
+export function litres(x: number): string {
+  return `${num(x, x >= 10 ? 0 : 1)} L/m²`;
+}
+
 export function deg(x: number): string {
   return `${Math.round(x)}°`;
 }

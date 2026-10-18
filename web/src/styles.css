@@ -147,6 +147,14 @@ button { font: inherit; color: inherit; }
 .verdict strong { color: var(--c, var(--ink)); }
 .note { font-size: 13px; color: var(--soft); }
 .balance-value { font-family: 'Fraunces Variable', Fraunces, Georgia, serif; font-size: 26px; font-weight: 700; margin: 4px 0 6px; }
+.flow { display: grid; grid-template-columns: 150px 1fr 70px; gap: 10px; align-items: center; margin: 6px 0; font-size: 13px; }
+.flow-label { color: var(--muted); }
+.flow-track { height: 14px; background: var(--chip); border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.flow-bar { height: 100%; border-radius: 7px; }
+.flow-bar.in { background: var(--rain); }
+.flow-bar.out { background: var(--warm); }
+.flow-value { text-align: right; font-weight: 700; }
+@media (max-width: 520px) { .flow { grid-template-columns: 110px 1fr 62px; font-size: 12px; } }
 .balance-usual { margin: 10px 0 0; font-weight: 600; color: var(--c, var(--ink)); }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
